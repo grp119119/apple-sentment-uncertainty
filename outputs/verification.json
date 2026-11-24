@@ -1,0 +1,594 @@
+{
+  "status": "DEMONSTRATION_ONLY_NOT_STUDY_DATA",
+  "run_type": "all_scenarios",
+  "context": {
+    "user_initiated": true,
+    "receptive": false
+  },
+  "scenarios": {
+    "清晰一致的恐惧": {
+      "status": "DEMONSTRATION_ONLY_NOT_STUDY_DATA",
+      "context": {
+        "privacy": "private",
+        "time_pressure": "low",
+        "interaction_stage": "exploring",
+        "receptive": false,
+        "user_initiated": true
+      },
+      "conditions": {
+        "emotion_only": {
+          "affect": {
+            "dominant_emotion": "fear",
+            "distribution": {
+              "anger": 0.0,
+              "disgust": 0.0,
+              "fear": 0.82,
+              "joy": 0.0,
+              "sadness": 0.08,
+              "surprise": 0.0,
+              "neutral": 0.1
+            },
+            "valence": -0.6799999999999999,
+            "arousal": 0.82,
+            "dominance": null
+          },
+          "uncertainty": {
+            "predictive_entropy": 0.3057934462629179,
+            "top_two_margin": 0.72,
+            "signal_quality": 0.9,
+            "data_coverage": 1.0,
+            "missingness": 0.0,
+            "ensemble_variance": 0.0,
+            "temporal_instability": 0.0,
+            "cross_modal_disagreement": 0.0033474131231349944,
+            "reasons": [
+              "predictive entropy=0.306",
+              "top-two margin=0.720",
+              "signal quality=0.900",
+              "data coverage=1.000",
+              "cross-modal disagreement is experimental pending affect-specific calibration"
+            ]
+          },
+          "decision": {
+            "mode": "DEFER",
+            "intensity": "none",
+            "support_action": "Reflection of Feelings",
+            "epistemic_style": "deferred",
+            "reasons": [
+              "early negative affect favors reflection of feelings",
+              "shared safety/receptivity boundary applies to both conditions"
+            ],
+            "policy_name": "emotion_only",
+            "policy_version": "0.3-baseline",
+            "calibration_status": "BASELINE_FIXED"
+          },
+          "response": "我先不打扰。如果你希望我介入，可以随时告诉我。",
+          "fusion_notes": [
+            "turn-level label space: Ekman six emotions plus Neutral",
+            "full probability distribution retained; top-1 is not treated as ground truth",
+            "scenario-level ESConv self-report labels are stored separately"
+          ]
+        },
+        "uncertainty_aware": {
+          "affect": {
+            "dominant_emotion": "fear",
+            "distribution": {
+              "anger": 0.0,
+              "disgust": 0.0,
+              "fear": 0.82,
+              "joy": 0.0,
+              "sadness": 0.08,
+              "surprise": 0.0,
+              "neutral": 0.1
+            },
+            "valence": -0.6799999999999999,
+            "arousal": 0.82,
+            "dominance": null
+          },
+          "uncertainty": {
+            "predictive_entropy": 0.3057934462629179,
+            "top_two_margin": 0.72,
+            "signal_quality": 0.9,
+            "data_coverage": 1.0,
+            "missingness": 0.0,
+            "ensemble_variance": 0.0,
+            "temporal_instability": 0.0,
+            "cross_modal_disagreement": 0.0033474131231349944,
+            "reasons": [
+              "predictive entropy=0.306",
+              "top-two margin=0.720",
+              "signal quality=0.900",
+              "data coverage=1.000",
+              "cross-modal disagreement is experimental pending affect-specific calibration"
+            ]
+          },
+          "decision": {
+            "mode": "DEFER",
+            "intensity": "none",
+            "support_action": "Reflection of Feelings",
+            "epistemic_style": "deferred",
+            "reasons": [
+              "early negative affect favors reflection of feelings",
+              "the user is currently not receptive"
+            ],
+            "policy_name": "uncertainty_aware",
+            "policy_version": "0.3-pilot-draft",
+            "calibration_status": "PILOT_DRAFT_NOT_VALIDATED"
+          },
+          "response": "我先不打扰。如果你希望我介入，可以随时告诉我。",
+          "fusion_notes": [
+            "turn-level label space: Ekman six emotions plus Neutral",
+            "full probability distribution retained; top-1 is not treated as ground truth",
+            "scenario-level ESConv self-report labels are stored separately"
+          ]
+        }
+      },
+      "summary": {
+        "emotion_only": {
+          "mode": "DEFER",
+          "intensity": "none",
+          "support_action": "Reflection of Feelings",
+          "uncertainty": {
+            "predictive_entropy": 0.3057934462629179,
+            "top_two_margin": 0.72,
+            "signal_quality": 0.9,
+            "data_coverage": 1.0,
+            "missingness": 0.0,
+            "cross_modal_disagreement": 0.0033474131231349944
+          }
+        },
+        "uncertainty_aware": {
+          "mode": "DEFER",
+          "intensity": "none",
+          "support_action": "Reflection of Feelings",
+          "uncertainty": {
+            "predictive_entropy": 0.3057934462629179,
+            "top_two_margin": 0.72,
+            "signal_quality": 0.9,
+            "data_coverage": 1.0,
+            "missingness": 0.0,
+            "cross_modal_disagreement": 0.0033474131231349944
+          }
+        }
+      }
+    },
+    "恐惧与悲伤难区分": {
+      "status": "DEMONSTRATION_ONLY_NOT_STUDY_DATA",
+      "context": {
+        "privacy": "private",
+        "time_pressure": "low",
+        "interaction_stage": "exploring",
+        "receptive": false,
+        "user_initiated": true
+      },
+      "conditions": {
+        "emotion_only": {
+          "affect": {
+            "dominant_emotion": "fear",
+            "distribution": {
+              "anger": 0.0,
+              "disgust": 0.0,
+              "fear": 0.35,
+              "joy": 0.0,
+              "sadness": 0.33999999999999997,
+              "surprise": 0.0,
+              "neutral": 0.31
+            },
+            "valence": -0.48333333333333334,
+            "arousal": 0.7166666666666667,
+            "dominance": null
+          },
+          "uncertainty": {
+            "predictive_entropy": 0.5639005239988165,
+            "top_two_margin": 0.010000000000000009,
+            "signal_quality": 0.9,
+            "data_coverage": 1.0,
+            "missingness": 0.0,
+            "ensemble_variance": 0.0,
+            "temporal_instability": 0.0,
+            "cross_modal_disagreement": 0.00409146349452858,
+            "reasons": [
+              "predictive entropy=0.564",
+              "top-two margin=0.010",
+              "signal quality=0.900",
+              "data coverage=1.000",
+              "cross-modal disagreement is experimental pending affect-specific calibration"
+            ]
+          },
+          "decision": {
+            "mode": "DEFER",
+            "intensity": "none",
+            "support_action": "Reflection of Feelings",
+            "epistemic_style": "deferred",
+            "reasons": [
+              "early negative affect favors reflection of feelings",
+              "shared safety/receptivity boundary applies to both conditions"
+            ],
+            "policy_name": "emotion_only",
+            "policy_version": "0.3-baseline",
+            "calibration_status": "BASELINE_FIXED"
+          },
+          "response": "我先不打扰。如果你希望我介入，可以随时告诉我。",
+          "fusion_notes": [
+            "turn-level label space: Ekman six emotions plus Neutral",
+            "full probability distribution retained; top-1 is not treated as ground truth",
+            "scenario-level ESConv self-report labels are stored separately"
+          ]
+        },
+        "uncertainty_aware": {
+          "affect": {
+            "dominant_emotion": "fear",
+            "distribution": {
+              "anger": 0.0,
+              "disgust": 0.0,
+              "fear": 0.35,
+              "joy": 0.0,
+              "sadness": 0.33999999999999997,
+              "surprise": 0.0,
+              "neutral": 0.31
+            },
+            "valence": -0.48333333333333334,
+            "arousal": 0.7166666666666667,
+            "dominance": null
+          },
+          "uncertainty": {
+            "predictive_entropy": 0.5639005239988165,
+            "top_two_margin": 0.010000000000000009,
+            "signal_quality": 0.9,
+            "data_coverage": 1.0,
+            "missingness": 0.0,
+            "ensemble_variance": 0.0,
+            "temporal_instability": 0.0,
+            "cross_modal_disagreement": 0.00409146349452858,
+            "reasons": [
+              "predictive entropy=0.564",
+              "top-two margin=0.010",
+              "signal quality=0.900",
+              "data coverage=1.000",
+              "cross-modal disagreement is experimental pending affect-specific calibration"
+            ]
+          },
+          "decision": {
+            "mode": "DEFER",
+            "intensity": "none",
+            "support_action": "Reflection of Feelings",
+            "epistemic_style": "deferred",
+            "reasons": [
+              "early negative affect favors reflection of feelings",
+              "the user is currently not receptive"
+            ],
+            "policy_name": "uncertainty_aware",
+            "policy_version": "0.3-pilot-draft",
+            "calibration_status": "PILOT_DRAFT_NOT_VALIDATED"
+          },
+          "response": "我先不打扰。如果你希望我介入，可以随时告诉我。",
+          "fusion_notes": [
+            "turn-level label space: Ekman six emotions plus Neutral",
+            "full probability distribution retained; top-1 is not treated as ground truth",
+            "scenario-level ESConv self-report labels are stored separately"
+          ]
+        }
+      },
+      "summary": {
+        "emotion_only": {
+          "mode": "DEFER",
+          "intensity": "none",
+          "support_action": "Reflection of Feelings",
+          "uncertainty": {
+            "predictive_entropy": 0.5639005239988165,
+            "top_two_margin": 0.010000000000000009,
+            "signal_quality": 0.9,
+            "data_coverage": 1.0,
+            "missingness": 0.0,
+            "cross_modal_disagreement": 0.00409146349452858
+          }
+        },
+        "uncertainty_aware": {
+          "mode": "DEFER",
+          "intensity": "none",
+          "support_action": "Reflection of Feelings",
+          "uncertainty": {
+            "predictive_entropy": 0.5639005239988165,
+            "top_two_margin": 0.010000000000000009,
+            "signal_quality": 0.9,
+            "data_coverage": 1.0,
+            "missingness": 0.0,
+            "cross_modal_disagreement": 0.00409146349452858
+          }
+        }
+      }
+    },
+    "语言与非语言冲突": {
+      "status": "DEMONSTRATION_ONLY_NOT_STUDY_DATA",
+      "context": {
+        "privacy": "private",
+        "time_pressure": "low",
+        "interaction_stage": "exploring",
+        "receptive": false,
+        "user_initiated": true
+      },
+      "conditions": {
+        "emotion_only": {
+          "affect": {
+            "dominant_emotion": "fear",
+            "distribution": {
+              "anger": 0.0,
+              "disgust": 0.0,
+              "fear": 0.46666666666666673,
+              "joy": 0.2333333333333333,
+              "sadness": 0.12333333333333335,
+              "surprise": 0.0,
+              "neutral": 0.17666666666666667
+            },
+            "valence": -0.2,
+            "arousal": 0.6366666666666666,
+            "dominance": null
+          },
+          "uncertainty": {
+            "predictive_entropy": 0.647307554745791,
+            "top_two_margin": 0.23333333333333342,
+            "signal_quality": 0.9,
+            "data_coverage": 1.0,
+            "missingness": 0.0,
+            "ensemble_variance": 0.0,
+            "temporal_instability": 0.0,
+            "cross_modal_disagreement": 0.36470367721581426,
+            "reasons": [
+              "predictive entropy=0.647",
+              "top-two margin=0.233",
+              "signal quality=0.900",
+              "data coverage=1.000",
+              "cross-modal disagreement is experimental pending affect-specific calibration"
+            ]
+          },
+          "decision": {
+            "mode": "DEFER",
+            "intensity": "none",
+            "support_action": "Reflection of Feelings",
+            "epistemic_style": "deferred",
+            "reasons": [
+              "early negative affect favors reflection of feelings",
+              "shared safety/receptivity boundary applies to both conditions"
+            ],
+            "policy_name": "emotion_only",
+            "policy_version": "0.3-baseline",
+            "calibration_status": "BASELINE_FIXED"
+          },
+          "response": "我先不打扰。如果你希望我介入，可以随时告诉我。",
+          "fusion_notes": [
+            "turn-level label space: Ekman six emotions plus Neutral",
+            "full probability distribution retained; top-1 is not treated as ground truth",
+            "scenario-level ESConv self-report labels are stored separately"
+          ]
+        },
+        "uncertainty_aware": {
+          "affect": {
+            "dominant_emotion": "fear",
+            "distribution": {
+              "anger": 0.0,
+              "disgust": 0.0,
+              "fear": 0.46666666666666673,
+              "joy": 0.2333333333333333,
+              "sadness": 0.12333333333333335,
+              "surprise": 0.0,
+              "neutral": 0.17666666666666667
+            },
+            "valence": -0.2,
+            "arousal": 0.6366666666666666,
+            "dominance": null
+          },
+          "uncertainty": {
+            "predictive_entropy": 0.647307554745791,
+            "top_two_margin": 0.23333333333333342,
+            "signal_quality": 0.9,
+            "data_coverage": 1.0,
+            "missingness": 0.0,
+            "ensemble_variance": 0.0,
+            "temporal_instability": 0.0,
+            "cross_modal_disagreement": 0.36470367721581426,
+            "reasons": [
+              "predictive entropy=0.647",
+              "top-two margin=0.233",
+              "signal quality=0.900",
+              "data coverage=1.000",
+              "cross-modal disagreement is experimental pending affect-specific calibration"
+            ]
+          },
+          "decision": {
+            "mode": "DEFER",
+            "intensity": "none",
+            "support_action": "Reflection of Feelings",
+            "epistemic_style": "deferred",
+            "reasons": [
+              "early negative affect favors reflection of feelings",
+              "the user is currently not receptive"
+            ],
+            "policy_name": "uncertainty_aware",
+            "policy_version": "0.3-pilot-draft",
+            "calibration_status": "PILOT_DRAFT_NOT_VALIDATED"
+          },
+          "response": "我先不打扰。如果你希望我介入，可以随时告诉我。",
+          "fusion_notes": [
+            "turn-level label space: Ekman six emotions plus Neutral",
+            "full probability distribution retained; top-1 is not treated as ground truth",
+            "scenario-level ESConv self-report labels are stored separately"
+          ]
+        }
+      },
+      "summary": {
+        "emotion_only": {
+          "mode": "DEFER",
+          "intensity": "none",
+          "support_action": "Reflection of Feelings",
+          "uncertainty": {
+            "predictive_entropy": 0.647307554745791,
+            "top_two_margin": 0.23333333333333342,
+            "signal_quality": 0.9,
+            "data_coverage": 1.0,
+            "missingness": 0.0,
+            "cross_modal_disagreement": 0.36470367721581426
+          }
+        },
+        "uncertainty_aware": {
+          "mode": "DEFER",
+          "intensity": "none",
+          "support_action": "Reflection of Feelings",
+          "uncertainty": {
+            "predictive_entropy": 0.647307554745791,
+            "top_two_margin": 0.23333333333333342,
+            "signal_quality": 0.9,
+            "data_coverage": 1.0,
+            "missingness": 0.0,
+            "cross_modal_disagreement": 0.36470367721581426
+          }
+        }
+      }
+    },
+    "仅文本信号可用": {
+      "status": "DEMONSTRATION_ONLY_NOT_STUDY_DATA",
+      "context": {
+        "privacy": "private",
+        "time_pressure": "low",
+        "interaction_stage": "exploring",
+        "receptive": false,
+        "user_initiated": true
+      },
+      "conditions": {
+        "emotion_only": {
+          "affect": {
+            "dominant_emotion": "sadness",
+            "distribution": {
+              "anger": 0.0,
+              "disgust": 0.0,
+              "fear": 0.15,
+              "joy": 0.0,
+              "sadness": 0.58,
+              "surprise": 0.0,
+              "neutral": 0.27
+            },
+            "valence": -0.52,
+            "arousal": 0.58,
+            "dominance": null
+          },
+          "uncertainty": {
+            "predictive_entropy": 0.4902743101205487,
+            "top_two_margin": 0.30999999999999994,
+            "signal_quality": 0.9,
+            "data_coverage": 0.3333333333333333,
+            "missingness": 0.6666666666666667,
+            "ensemble_variance": 0.0,
+            "temporal_instability": 0.0,
+            "cross_modal_disagreement": 0.0,
+            "reasons": [
+              "predictive entropy=0.490",
+              "top-two margin=0.310",
+              "signal quality=0.900",
+              "data coverage=0.333",
+              "cross-modal disagreement is experimental pending affect-specific calibration"
+            ]
+          },
+          "decision": {
+            "mode": "DEFER",
+            "intensity": "none",
+            "support_action": "Reflection of Feelings",
+            "epistemic_style": "deferred",
+            "reasons": [
+              "early negative affect favors reflection of feelings",
+              "shared safety/receptivity boundary applies to both conditions"
+            ],
+            "policy_name": "emotion_only",
+            "policy_version": "0.3-baseline",
+            "calibration_status": "BASELINE_FIXED"
+          },
+          "response": "我先不打扰。如果你希望我介入，可以随时告诉我。",
+          "fusion_notes": [
+            "turn-level label space: Ekman six emotions plus Neutral",
+            "full probability distribution retained; top-1 is not treated as ground truth",
+            "scenario-level ESConv self-report labels are stored separately"
+          ]
+        },
+        "uncertainty_aware": {
+          "affect": {
+            "dominant_emotion": "sadness",
+            "distribution": {
+              "anger": 0.0,
+              "disgust": 0.0,
+              "fear": 0.15,
+              "joy": 0.0,
+              "sadness": 0.58,
+              "surprise": 0.0,
+              "neutral": 0.27
+            },
+            "valence": -0.52,
+            "arousal": 0.58,
+            "dominance": null
+          },
+          "uncertainty": {
+            "predictive_entropy": 0.4902743101205487,
+            "top_two_margin": 0.30999999999999994,
+            "signal_quality": 0.9,
+            "data_coverage": 0.3333333333333333,
+            "missingness": 0.6666666666666667,
+            "ensemble_variance": 0.0,
+            "temporal_instability": 0.0,
+            "cross_modal_disagreement": 0.0,
+            "reasons": [
+              "predictive entropy=0.490",
+              "top-two margin=0.310",
+              "signal quality=0.900",
+              "data coverage=0.333",
+              "cross-modal disagreement is experimental pending affect-specific calibration"
+            ]
+          },
+          "decision": {
+            "mode": "DEFER",
+            "intensity": "none",
+            "support_action": "Reflection of Feelings",
+            "epistemic_style": "deferred",
+            "reasons": [
+              "early negative affect favors reflection of feelings",
+              "the user is currently not receptive"
+            ],
+            "policy_name": "uncertainty_aware",
+            "policy_version": "0.3-pilot-draft",
+            "calibration_status": "PILOT_DRAFT_NOT_VALIDATED"
+          },
+          "response": "我先不打扰。如果你希望我介入，可以随时告诉我。",
+          "fusion_notes": [
+            "turn-level label space: Ekman six emotions plus Neutral",
+            "full probability distribution retained; top-1 is not treated as ground truth",
+            "scenario-level ESConv self-report labels are stored separately"
+          ]
+        }
+      },
+      "summary": {
+        "emotion_only": {
+          "mode": "DEFER",
+          "intensity": "none",
+          "support_action": "Reflection of Feelings",
+          "uncertainty": {
+            "predictive_entropy": 0.4902743101205487,
+            "top_two_margin": 0.30999999999999994,
+            "signal_quality": 0.9,
+            "data_coverage": 0.3333333333333333,
+            "missingness": 0.6666666666666667,
+            "cross_modal_disagreement": 0.0
+          }
+        },
+        "uncertainty_aware": {
+          "mode": "DEFER",
+          "intensity": "none",
+          "support_action": "Reflection of Feelings",
+          "uncertainty": {
+            "predictive_entropy": 0.4902743101205487,
+            "top_two_margin": 0.30999999999999994,
+            "signal_quality": 0.9,
+            "data_coverage": 0.3333333333333333,
+            "missingness": 0.6666666666666667,
+            "cross_modal_disagreement": 0.0
+          }
+        }
+      }
+    }
+  }
+}

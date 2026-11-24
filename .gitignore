@@ -1,0 +1,36 @@
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# ---------- IDE / 编辑器 ----------
+.idea/
+.vscode/
+*.swp
+
+# ---------- macOS / Windows ----------
+.DS_Store
+._*
+Thumbs.db
+
+# ---------- 临时与输出 ----------
+tmp/
+*.log
+
+# ---------- 模型重复文件 ----------
+models/visual/face_detection_yunet_2023mar (1).onnx
+
+# ---------- 隐私素材（仓库设为 Public 时取消下面注释）----------
+# data/test_audio/
+# data/test_faces/
+# data/journeys/
+# data/session_history.json
+# 郭润苹开题报告_原版备份.docx

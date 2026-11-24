@@ -1,0 +1,18 @@
+# 空间人因多模态情感交互系统依赖列表
+# Python 推荐版本: 3.10 ~ 3.12
+
+# 深度学习基础推理框架 (Windows 若有英伟达显卡，可按 PyTorch 官网安装对应 CUDA 版本)
+torch>=2.0.0
+torchaudio>=2.0.0
+onnxruntime>=1.16.0
+
+# 阿里 FunASR 语音大模型引擎 (SenseVoiceSmall + emotion2vec+)
+funasr>=1.0.0
+modelscope>=1.10.0
+
+# 视觉与音视频流捕获
+opencv-python>=4.8.0
+pillow>=10.0.0
+sounddevice>=0.4.6
+numpy>=1.24.0
+

@@ -1,0 +1,16 @@
+{
+  "policy_version": "0.3-pilot-draft",
+  "calibration_status": "PILOT_DRAFT_NOT_VALIDATED",
+  "evidence_note": "Engineering defaults only. Replace after Study 1 and freeze before Study 2.",
+  "thresholds": {
+    "minimum_signal_quality": 0.45,
+    "minimum_data_coverage": 0.5,
+    "high_entropy": 0.72,
+    "moderate_entropy": 0.5,
+    "low_margin": 0.18,
+    "moderate_margin": 0.32,
+    "high_ensemble_variance": 0.35,
+    "high_temporal_instability": 0.55,
+    "experimental_cross_modal_disagreement": 0.35
+  }
+}

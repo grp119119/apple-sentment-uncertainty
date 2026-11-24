@@ -1,0 +1,192 @@
+{
+  "session_id": "20261119_195723",
+  "export_time": "2026-11-19T19:57:23.337677",
+  "total_turns": 8,
+  "default_need": "LISTEN",
+  "turns": [
+    {
+      "turn_index": 1,
+      "timestamp": 1795089376.079642,
+      "event_type": "prolonged_silence",
+      "user_initiated": false,
+      "transcript": "[沉默无言语]",
+      "face_dominant_emotion": "neutral",
+      "face_signal_quality": 0.888563517368201,
+      "audio_dominant_emotion": "N/A",
+      "cross_modal_disagreement": 0.0,
+      "predictive_entropy": 0.002046589052723385,
+      "top_two_margin": 0.9991254748808607,
+      "overall_signal_quality": 0.888563517368201,
+      "fused_dominant_emotion": "neutral",
+      "policy_mode": "DIRECT",
+      "policy_action": "Affirmation and Reassurance",
+      "policy_intensity": "low",
+      "epistemic_style": "certain",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance",
+        "the affect estimate is sufficiently clear for direct support"
+      ]
+    },
+    {
+      "turn_index": 2,
+      "timestamp": 1795089386.127893,
+      "event_type": "prolonged_silence",
+      "user_initiated": false,
+      "transcript": "[沉默无言语]",
+      "face_dominant_emotion": "neutral",
+      "face_signal_quality": 0.9023528210818768,
+      "audio_dominant_emotion": "N/A",
+      "cross_modal_disagreement": 0.0,
+      "predictive_entropy": 0.001939848346346791,
+      "top_two_margin": 0.9992633948097612,
+      "overall_signal_quality": 0.9023528210818768,
+      "fused_dominant_emotion": "neutral",
+      "policy_mode": "DIRECT",
+      "policy_action": "Affirmation and Reassurance",
+      "policy_intensity": "low",
+      "epistemic_style": "certain",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance",
+        "the affect estimate is sufficiently clear for direct support"
+      ]
+    },
+    {
+      "turn_index": 3,
+      "timestamp": 1795089396.1754172,
+      "event_type": "prolonged_silence",
+      "user_initiated": false,
+      "transcript": "[沉默无言语]",
+      "face_dominant_emotion": "neutral",
+      "face_signal_quality": 0.8913868168989817,
+      "audio_dominant_emotion": "N/A",
+      "cross_modal_disagreement": 0.0,
+      "predictive_entropy": 0.0017043238008938387,
+      "top_two_margin": 0.9995071701085568,
+      "overall_signal_quality": 0.8913868168989817,
+      "fused_dominant_emotion": "neutral",
+      "policy_mode": "DIRECT",
+      "policy_action": "Reflection of Feelings",
+      "policy_intensity": "low",
+      "epistemic_style": "certain",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance; history switches after repeated support without improvement",
+        "the affect estimate is sufficiently clear for direct support"
+      ]
+    },
+    {
+      "turn_index": 4,
+      "timestamp": 1795089399.95122,
+      "event_type": "speech_finished",
+      "user_initiated": true,
+      "transcript": "[沉默无言语]",
+      "face_dominant_emotion": "neutral",
+      "face_signal_quality": 0.8897737392357418,
+      "audio_dominant_emotion": "neutral",
+      "cross_modal_disagreement": 0.009329265440368509,
+      "predictive_entropy": 0.028891285382284526,
+      "top_two_margin": 0.9892311062332162,
+      "overall_signal_quality": 0.6948868696178709,
+      "fused_dominant_emotion": "neutral",
+      "policy_mode": "DIRECT",
+      "policy_action": "Affirmation and Reassurance",
+      "policy_intensity": "low",
+      "epistemic_style": "certain",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance",
+        "the affect estimate is sufficiently clear for direct support"
+      ]
+    },
+    {
+      "turn_index": 5,
+      "timestamp": 1795089409.981044,
+      "event_type": "prolonged_silence",
+      "user_initiated": false,
+      "transcript": "[沉默无言语]",
+      "face_dominant_emotion": "neutral",
+      "face_signal_quality": 0.8823044916679119,
+      "audio_dominant_emotion": "N/A",
+      "cross_modal_disagreement": 0.0,
+      "predictive_entropy": 0.0018260253496347756,
+      "top_two_margin": 0.9994684792557914,
+      "overall_signal_quality": 0.8823044916679119,
+      "fused_dominant_emotion": "neutral",
+      "policy_mode": "DIRECT",
+      "policy_action": "Affirmation and Reassurance",
+      "policy_intensity": "low",
+      "epistemic_style": "certain",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance",
+        "the affect estimate is sufficiently clear for direct support"
+      ]
+    },
+    {
+      "turn_index": 6,
+      "timestamp": 1795089413.884759,
+      "event_type": "speech_finished",
+      "user_initiated": true,
+      "transcript": "[沉默无言语]",
+      "face_dominant_emotion": "neutral",
+      "face_signal_quality": 0.8825555145740509,
+      "audio_dominant_emotion": "neutral",
+      "cross_modal_disagreement": 0.01198053532653548,
+      "predictive_entropy": 0.03439546820664806,
+      "top_two_margin": 0.9871507021016722,
+      "overall_signal_quality": 0.6912777572870255,
+      "fused_dominant_emotion": "neutral",
+      "policy_mode": "DIRECT",
+      "policy_action": "Reflection of Feelings",
+      "policy_intensity": "low",
+      "epistemic_style": "certain",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance; history switches after repeated support without improvement",
+        "the affect estimate is sufficiently clear for direct support"
+      ]
+    },
+    {
+      "turn_index": 7,
+      "timestamp": 1795089423.933148,
+      "event_type": "prolonged_silence",
+      "user_initiated": false,
+      "transcript": "[沉默无言语]",
+      "face_dominant_emotion": "neutral",
+      "face_signal_quality": 0.8742778201897939,
+      "audio_dominant_emotion": "N/A",
+      "cross_modal_disagreement": 0.0,
+      "predictive_entropy": 0.0019024031920649434,
+      "top_two_margin": 0.9994681387634127,
+      "overall_signal_quality": 0.8742778201897939,
+      "fused_dominant_emotion": "neutral",
+      "policy_mode": "DIRECT",
+      "policy_action": "Affirmation and Reassurance",
+      "policy_intensity": "low",
+      "epistemic_style": "certain",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance",
+        "the affect estimate is sufficiently clear for direct support"
+      ]
+    },
+    {
+      "turn_index": 8,
+      "timestamp": 1795089433.9811149,
+      "event_type": "prolonged_silence",
+      "user_initiated": false,
+      "transcript": "[沉默无言语]",
+      "face_dominant_emotion": "neutral",
+      "face_signal_quality": 0.8576730798030722,
+      "audio_dominant_emotion": "N/A",
+      "cross_modal_disagreement": 0.0,
+      "predictive_entropy": 0.002103064936873672,
+      "top_two_margin": 0.9992580516301822,
+      "overall_signal_quality": 0.8576730798030722,
+      "fused_dominant_emotion": "neutral",
+      "policy_mode": "DIRECT",
+      "policy_action": "Affirmation and Reassurance",
+      "policy_intensity": "low",
+      "epistemic_style": "certain",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance",
+        "the affect estimate is sufficiently clear for direct support"
+      ]
+    }
+  ]
+}

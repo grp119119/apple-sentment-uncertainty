@@ -1,0 +1,170 @@
+{
+  "session_id": "20261120_162037",
+  "export_time": "2026-11-20T16:20:37.929002",
+  "total_turns": 7,
+  "default_need": "COMFORT",
+  "turns": [
+    {
+      "turn_index": 1,
+      "timestamp": 1795162769.860428,
+      "event_type": "speech_finished",
+      "user_initiated": true,
+      "transcript": "我。",
+      "face_dominant_emotion": "sadness",
+      "face_signal_quality": 0.9100657786641803,
+      "audio_dominant_emotion": "sadness",
+      "cross_modal_disagreement": 0.11737262625640787,
+      "predictive_entropy": 0.5641428256075001,
+      "top_two_margin": 0.4250552678344631,
+      "overall_signal_quality": 0.7050328893320901,
+      "fused_dominant_emotion": "sadness",
+      "policy_mode": "TENTATIVE",
+      "policy_action": "Affirmation and Reassurance",
+      "policy_intensity": "low",
+      "epistemic_style": "tentative",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance",
+        "partial uncertainty requires a low-commitment, correctable response"
+      ]
+    },
+    {
+      "turn_index": 2,
+      "timestamp": 1795162773.060652,
+      "event_type": "speech_finished",
+      "user_initiated": true,
+      "transcript": "[沉默无言语]",
+      "face_dominant_emotion": "sadness",
+      "face_signal_quality": 0.9065680566586947,
+      "audio_dominant_emotion": "joy",
+      "cross_modal_disagreement": 0.5165148528620449,
+      "predictive_entropy": 0.6400358979854622,
+      "top_two_margin": 0.29992396669293697,
+      "overall_signal_quality": 0.7032840283293473,
+      "fused_dominant_emotion": "joy",
+      "policy_mode": "TENTATIVE",
+      "policy_action": "Affirmation and Reassurance",
+      "policy_intensity": "medium",
+      "epistemic_style": "tentative",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance",
+        "partial uncertainty requires a low-commitment, correctable response"
+      ]
+    },
+    {
+      "turn_index": 3,
+      "timestamp": 1795162778.11714,
+      "event_type": "speech_finished",
+      "user_initiated": true,
+      "transcript": "[沉默无言语]",
+      "face_dominant_emotion": "sadness",
+      "face_signal_quality": 0.8993203061999697,
+      "audio_dominant_emotion": "neutral",
+      "cross_modal_disagreement": 0.9642069857105176,
+      "predictive_entropy": 0.3777094956063607,
+      "top_two_margin": 0.26173865307806066,
+      "overall_signal_quality": 0.6996601530999849,
+      "fused_dominant_emotion": "sadness",
+      "policy_mode": "TENTATIVE",
+      "policy_action": "Reflection of Feelings",
+      "policy_intensity": "low",
+      "epistemic_style": "tentative",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance; history switches after repeated support without improvement",
+        "partial uncertainty requires a low-commitment, correctable response"
+      ]
+    },
+    {
+      "turn_index": 4,
+      "timestamp": 1795162787.268806,
+      "event_type": "speech_finished",
+      "user_initiated": true,
+      "transcript": "我。",
+      "face_dominant_emotion": "joy",
+      "face_signal_quality": 0.908261775970459,
+      "audio_dominant_emotion": "joy",
+      "cross_modal_disagreement": 0.1658394353345083,
+      "predictive_entropy": 0.6009329858016251,
+      "top_two_margin": 0.5011498374050737,
+      "overall_signal_quality": 0.7048115022480488,
+      "fused_dominant_emotion": "joy",
+      "policy_mode": "TENTATIVE",
+      "policy_action": "Affirmation and Reassurance",
+      "policy_intensity": "medium",
+      "epistemic_style": "tentative",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance",
+        "partial uncertainty requires a low-commitment, correctable response"
+      ]
+    },
+    {
+      "turn_index": 5,
+      "timestamp": 1795162795.460949,
+      "event_type": "speech_finished",
+      "user_initiated": true,
+      "transcript": "我。",
+      "face_dominant_emotion": "sadness",
+      "face_signal_quality": 0.9034985542297364,
+      "audio_dominant_emotion": "neutral",
+      "cross_modal_disagreement": 0.49973316425559267,
+      "predictive_entropy": 0.6086574077073708,
+      "top_two_margin": 0.10046391430083307,
+      "overall_signal_quality": 0.7017492771148681,
+      "fused_dominant_emotion": "neutral",
+      "policy_mode": "CONFIRM",
+      "policy_action": "Question",
+      "policy_intensity": "low",
+      "epistemic_style": "confirmatory",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance",
+        "emotion probabilities are highly ambiguous or unstable",
+        "CONFIRM temporarily replaces the affect-led content action with a clarification question"
+      ]
+    },
+    {
+      "turn_index": 6,
+      "timestamp": 1795162802.564448,
+      "event_type": "speech_finished",
+      "user_initiated": true,
+      "transcript": "我。",
+      "face_dominant_emotion": "sadness",
+      "face_signal_quality": 0.9036070108413696,
+      "audio_dominant_emotion": "sadness",
+      "cross_modal_disagreement": 0.2039971280140478,
+      "predictive_entropy": 0.6983140812117882,
+      "top_two_margin": 0.2660332640561539,
+      "overall_signal_quality": 0.7018035054206848,
+      "fused_dominant_emotion": "sadness",
+      "policy_mode": "TENTATIVE",
+      "policy_action": "Affirmation and Reassurance",
+      "policy_intensity": "low",
+      "epistemic_style": "tentative",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance",
+        "partial uncertainty requires a low-commitment, correctable response"
+      ]
+    },
+    {
+      "turn_index": 7,
+      "timestamp": 1795162808.5808861,
+      "event_type": "speech_finished",
+      "user_initiated": true,
+      "transcript": "我。",
+      "face_dominant_emotion": "sadness",
+      "face_signal_quality": 0.90407011685548,
+      "audio_dominant_emotion": "neutral",
+      "cross_modal_disagreement": 0.9086092785115839,
+      "predictive_entropy": 0.40883430809989524,
+      "top_two_margin": 0.2572752415245223,
+      "overall_signal_quality": 0.7020350584277399,
+      "fused_dominant_emotion": "sadness",
+      "policy_mode": "TENTATIVE",
+      "policy_action": "Affirmation and Reassurance",
+      "policy_intensity": "low",
+      "epistemic_style": "tentative",
+      "policy_reasons": [
+        "explicit comfort need favors affirmation and reassurance",
+        "partial uncertainty requires a low-commitment, correctable response"
+      ]
+    }
+  ]
+}
