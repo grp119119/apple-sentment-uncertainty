@@ -39,10 +39,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Live Multimodal Interactive Installation Runner")
     parser.add_argument("--camera-id", type=int, default=0, help="Camera device index (default: 0)")
     parser.add_argument("--sample-rate", type=int, default=16000, help="Audio sample rate (default: 16000)")
-    parser.add_argument("--energy-thresh", type=float, default=0.015, help="VAD energy threshold (default: 0.015)")
-    parser.add_argument("--silence-cutoff", type=float, default=0.75, help="Speech end silence cutoff (seconds)")
-    parser.add_argument("--silence-timeout", type=float, default=8.0, help="Prolonged silence timeout (seconds)")
-    parser.add_argument("--need", type=str, default="COMFORT", choices=[n.name for n in UserNeed], help="Default user need")
+    parser.add_argument("--energy-thresh", type=float, default=0.018, help="VAD energy threshold (default: 0.018)")
+    parser.add_argument("--silence-cutoff", type=float, default=1.15, help="Speech end silence cutoff (seconds)")
+    parser.add_argument("--silence-timeout", type=float, default=10.0, help="Prolonged silence timeout (seconds)")
+    parser.add_argument("--need", type=str, default="UNKNOWN", choices=[n.name for n in UserNeed], help="Default user need (UNKNOWN = emotion-driven)")
     args = parser.parse_args()
 
     user_need = UserNeed[args.need]

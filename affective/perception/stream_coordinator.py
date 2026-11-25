@@ -30,6 +30,7 @@ from affective.models import (
     AffectLabel,
     HistoryEffect,
     HistoryRecord,
+    InteractionStage,
     InterventionDecision,
     UserNeed,
 )
@@ -310,7 +311,7 @@ class InteractiveSessionRunner:
         visual_detector: VisualEmotionDetector | None = None,
         audio_detector: AudioEmotionDetector | None = None,
         policy: UncertaintyAwarePolicy | None = None,
-        default_need: UserNeed = UserNeed.COMFORT,
+        default_need: UserNeed = UserNeed.UNKNOWN,
     ) -> None:
         self.visual_detector = visual_detector or VisualEmotionDetector()
         self.audio_detector = audio_detector or AudioEmotionDetector()
@@ -323,15 +324,36 @@ class InteractiveSessionRunner:
         self.turn_index: int = 0
         self.history: HistoryRecord = HistoryRecord()
         self.journey_records: list[dict] = []
+        # 跨轮追踪：用于真实计算 temporal_instability 与动态效价变化反馈 HistoryEffect
+        self._previous_distribution: dict[AffectLabel, float] | None = None
+        self._previous_valence: float | None = None
+        self._previous_decision = None
+        self._previous_need: UserNeed = default_need
+
+    def _infer_observed_effect(self, current_valence: float, data_coverage: float) -> HistoryEffect:
+        """Estimate affective feedback effect of the previous turn from observed valence shift."""
+        if self._previous_valence is None or data_coverage <= 0.0:
+            return HistoryEffect.UNKNOWN
+        delta = current_valence - self._previous_valence
+        if delta >= 0.15:
+            return HistoryEffect.IMPROVED
+        if delta <= -0.15:
+            return HistoryEffect.WORSENED
+        return HistoryEffect.UNCHANGED
 
     def handle_turn_event(
         self,
         event: TurnEvent,
         manual_need: UserNeed | None = None,
     ) -> dict | None:
-        """Execute one complete Turn: Fusion -> Policy -> History -> Turn Card."""
+        """Execute one complete Turn: Fusion -> Feedback Update -> Policy -> History -> Turn Card."""
         now = event.timestamp
-        current_need = manual_need or self.history.preferred_need or self.default_need
+        if manual_need is not None:
+            current_need = manual_need
+        elif self.history.preferred_need is not None:
+            current_need = self.history.preferred_need
+        else:
+            current_need = self.default_need
 
         # 1. 提取视觉感知
         if event.event_type == TurnEventType.SPEECH_FINISHED:
@@ -344,7 +366,7 @@ class InteractiveSessionRunner:
             vis_rec = self.visual_buffer.get_recent_aggregated_record(duration_seconds=3.0)
             user_initiated = False
 
-        # 2. 提取音频感知
+        # 2. 提取音频与文本感知
         if event.event_type == TurnEventType.SPEECH_FINISHED and event.audio_wav_path:
             audio_rec, text_rec = self.audio_detector.analyze_audio(event.audio_wav_path)
             # 清理临时文件
@@ -376,7 +398,7 @@ class InteractiveSessionRunner:
             text_rec = PerceptionRecord(
                 modality=PerceptionModality.TEXT,
                 source=PerceptionSource.ASR,
-                model_name="SenseVoiceSmall",
+                model_name="SenseVoiceSmall+zh_lexicon_v1",
                 model_version="small",
                 timestamp=now,
                 raw_scores={},
@@ -390,34 +412,52 @@ class InteractiveSessionRunner:
 
         self.turn_index += 1
 
-        # 3. 多模态后期融合与不确定性画像
-        active_records = [r for r in [vis_rec, audio_rec] if r.available]
-        fusion_result = safe_fuse_records(active_records)
+        # 3. 完整三模态后期融合与多源不确定性画像
+        # 关键修复：传入全部 3 个通道 [vis, audio, text]（含缺失通道），保证 data_coverage 真实反映模态覆盖率；
+        # 同时传入 _previous_distribution 激活跨轮时序波动 temporal_instability
+        all_records = [vis_rec, audio_rec, text_rec]
+        fusion_result = safe_fuse_records(
+            all_records,
+            previous_distribution=self._previous_distribution,
+        )
         aff = fusion_result.affect
         unc = fusion_result.uncertainty
 
-        # 4. Uncertainty-Aware Policy 决策
+        # 4. 在本轮策略决策前，用本轮观测效价相对上一轮的变化，动态回填上一轮介入的真实效果 (HistoryEffect)
+        observed_effect = self._infer_observed_effect(aff.valence, unc.data_coverage)
+        if self._previous_decision is not None:
+            self.history = update_history(
+                history=self.history,
+                decision=self._previous_decision,
+                need=self._previous_need,
+                effect=observed_effect,
+                accepted=True,
+            )
+
+        # 5. Uncertainty-Aware Policy 决策 (按 ESConv 交互进程：前 2 轮为探索阶段，第 3 轮起进入支持阶段)
+        stage = InteractionStage.EXPLORING if self.turn_index <= 2 else InteractionStage.SUPPORTING
         context = PolicyContext(
+            interaction_stage=stage,
             user_initiated=user_initiated,
             user_need=current_need,
             history=self.history,
         )
         decision = self.policy.decide(aff, unc, context)
 
-        # 5. 更新会话状态机 History (默认按常规接收且情绪稳定更新)
-        self.history = update_history(
-            history=self.history,
-            decision=decision,
-            need=current_need,
-            effect=HistoryEffect.UNCHANGED,
-            accepted=True,
-        )
+        # 保存本轮状态供下一轮计算时序波动与反馈效果
+        if unc.data_coverage > 0.0:
+            self._previous_distribution = dict(aff.distribution)
+            self._previous_valence = aff.valence
+        self._previous_decision = decision
+        self._previous_need = current_need
+
         # 仅刷新静默倒计时起点，绝不清空音频线程正在录制的说话缓冲 (修复跨线程吞字竞态)
         self.vad_tracker.mark_turn_completed(now)
 
         # 6. 构造结构化轮次记录 (沉淀为用户旅程数据源)
         top_vis_label = max(vis_rec.mapped_scores.items(), key=lambda x: x[1])[0].value if vis_rec.available and vis_rec.mapped_scores else "N/A"
         top_aud_label = max(audio_rec.mapped_scores.items(), key=lambda x: x[1])[0].value if audio_rec.available and audio_rec.mapped_scores else "N/A"
+        top_txt_label = max(text_rec.mapped_scores.items(), key=lambda x: x[1])[0].value if text_rec.available and text_rec.mapped_scores else "N/A"
 
         top_fused_label = "UNKNOWN"
         if aff.distribution:
@@ -429,15 +469,22 @@ class InteractiveSessionRunner:
             "timestamp": now,
             "event_type": event.event_type.value,
             "user_initiated": user_initiated,
+            "user_need": current_need.value,
             "transcript": text_rec.transcript if text_rec.available else "[沉默无言语]",
             "face_dominant_emotion": top_vis_label,
             "face_signal_quality": vis_rec.signal_quality,
             "audio_dominant_emotion": top_aud_label,
+            "text_dominant_emotion": top_txt_label,
+            "data_coverage": unc.data_coverage,
+            "temporal_instability": unc.temporal_instability,
             "cross_modal_disagreement": unc.cross_modal_disagreement,
             "predictive_entropy": unc.predictive_entropy,
             "top_two_margin": unc.top_two_margin,
             "overall_signal_quality": unc.signal_quality,
             "fused_dominant_emotion": top_fused_label,
+            "fused_valence": aff.valence,
+            "fused_arousal": aff.arousal,
+            "observed_feedback_effect": observed_effect.value,
             "policy_mode": decision.mode.value,
             "policy_action": decision.support_action.value,
             "policy_intensity": decision.intensity.value,
@@ -463,8 +510,9 @@ class InteractiveSessionRunner:
         print(f"  • 语音转写 (ASR): \"{data['transcript']}\"")
         print(f"  • 面部表情均值:    {data['face_dominant_emotion'].upper()} (人脸置信度: {data['face_signal_quality']:.1%})")
         print(f"  • 声学情绪特征:    {data['audio_dominant_emotion'].upper()}")
-        print(f"  • 跨模态冲突度:    {disagree_str}")
-        print(f"  • 预测不确定性熵:  {data['predictive_entropy']:.4f}")
+        print(f"  • 文本语义情绪:    {data.get('text_dominant_emotion', 'N/A').upper()}")
+        print(f"  • 模态覆盖率:      {data.get('data_coverage', 0.0):.1%} | 时序波动: {data.get('temporal_instability', 0.0):.4f}")
+        print(f"  • 跨模态冲突度:    {disagree_str} | 预测熵: {data['predictive_entropy']:.4f}")
 
         print("\n【2. Policy 自适应策略决策】")
         print(f"  • 决策干预模式:   【 {data['policy_mode'].upper()} 】")

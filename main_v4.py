@@ -92,8 +92,8 @@ class StrategyAppV4:
         self.root.minsize(1024, 640)
         self.root.configure(bg=BG_COLOR)
 
-        # 核心引擎与队列
-        self.runner = InteractiveSessionRunner(default_need=UserNeed.COMFORT)
+        # 核心引擎与队列 (默认 UserNeed.UNKNOWN：由多模态融合情绪自主驱动支持动作，避免预设需求架空情绪)
+        self.runner = InteractiveSessionRunner(default_need=UserNeed.UNKNOWN)
         self.event_queue: queue.Queue[TurnEvent] = queue.Queue()
         self.turn_result_queue: queue.Queue[dict] = queue.Queue()
         self.stop_event = threading.Event()
@@ -112,10 +112,10 @@ class StrategyAppV4:
         self._manual_capture_chunks: list[np.ndarray] = []
 
         # UI 状态绑定变量
-        self.current_need_var = tk.StringVar(value="COMFORT")
+        self.current_need_var = tk.StringVar(value="UNKNOWN")
         self.vad_status_var = tk.StringVar(value="● 装置待机中 (点击下方开启互动)")
         self.transcript_var = tk.StringVar(value="等待用户开口说话...")
-        self.fused_summary_var = tk.StringVar(value="面部均值: — ｜ 声音情绪: — ｜ 冲突度: — ｜ 信息熵: —")
+        self.fused_summary_var = tk.StringVar(value="面部: — ｜ 声音: — ｜ 文本: — ｜ 覆盖率: — ｜ 冲突度: — ｜ 熵: —")
 
         self.mode_theme_key = "IDLE"
         self.mode_title_var = tk.StringVar(value=MODE_THEMES["IDLE"]["zh"])
@@ -159,10 +159,14 @@ class StrategyAppV4:
         control_box = tk.Frame(header, bg=SURFACE_COLOR)
         control_box.pack(side="right")
 
-        tk.Label(control_box, text="预设需求:", font=(UI_FONT, 9, "bold"), bg=SURFACE_COLOR, fg=MUTED_COLOR).pack(side="left", padx=(0, 4))
-        need_options = [f"{NEED_LABELS.get(n.name, n.name)} ({n.name})" for n in UserNeed if n != UserNeed.UNKNOWN]
-        self.need_combo = ttk.Combobox(control_box, values=need_options, state="readonly", width=15)
-        self.need_combo.set("安慰 (COMFORT)")
+        tk.Label(control_box, text="需求模式:", font=(UI_FONT, 9, "bold"), bg=SURFACE_COLOR, fg=MUTED_COLOR).pack(side="left", padx=(0, 4))
+        need_options = ["自动感知·情绪驱动 (UNKNOWN)"] + [
+            f"{NEED_LABELS.get(n.name, n.name)} ({n.name})"
+            for n in UserNeed
+            if n != UserNeed.UNKNOWN
+        ]
+        self.need_combo = ttk.Combobox(control_box, values=need_options, state="readonly", width=21)
+        self.need_combo.set("自动感知·情绪驱动 (UNKNOWN)")
         self.need_combo.pack(side="left", padx=(0, 14))
         self.need_combo.bind("<<ComboboxSelected>>", self._on_need_changed)
 
@@ -472,13 +476,17 @@ class StrategyAppV4:
     # 交互调度与线程管理
     # -------------------------------------------------------------
     def _on_need_changed(self, event=None) -> None:
+        from dataclasses import replace
         raw_val = self.need_combo.get()
         need_code = raw_val.split("(")[-1].replace(")", "").strip()
         try:
-            self.runner.default_need = UserNeed[need_code]
+            selected = UserNeed[need_code]
+            self.runner.default_need = selected
             if self.runner.history is not None:
-                self.runner.history.preferred_need = UserNeed[need_code]
-            self.status_bar_var.set(f"核心需求已切换为: {NEED_LABELS.get(need_code, need_code)}")
+                pref = None if selected is UserNeed.UNKNOWN else selected
+                self.runner.history = replace(self.runner.history, preferred_need=pref)
+            label = "自动感知·情绪驱动" if selected is UserNeed.UNKNOWN else NEED_LABELS.get(need_code, need_code)
+            self.status_bar_var.set(f"需求模式已切换为: {label}")
         except Exception:
             pass
 
@@ -834,24 +842,33 @@ class StrategyAppV4:
         zh_aud = EMOTION_LABELS.get(aud_raw.lower(), aud_raw)
         aud_str = f"{zh_aud} ({aud_raw})" if aud_raw != "N/A" else "无音频输入"
 
+        txt_raw = data.get("text_dominant_emotion", "N/A")
+        zh_txt = EMOTION_LABELS.get(txt_raw.lower(), txt_raw)
+        txt_str = f"{zh_txt} ({txt_raw})" if txt_raw != "N/A" else "无文本语义"
+
         top_fused = data.get("fused_dominant_emotion", "UNKNOWN")
         zh_fused = EMOTION_LABELS.get(str(top_fused).lower(), str(top_fused))
 
+        cov_val = data.get("data_coverage", 0.0)
+        instab_val = data.get("temporal_instability", 0.0)
+        eff_map = {"improved": "情绪改善", "unchanged": "保持平稳", "worsened": "情绪变差", "unknown": "首轮/待观察"}
+        eff_str = eff_map.get(data.get("observed_feedback_effect", "unknown"), "待观察")
+
         self.fused_summary_var.set(
-            f"面部均值: {face_str} ｜ 声音: {aud_str} ｜ 冲突度: {disagree_val} ｜ 熵: {data['predictive_entropy']:.3f}"
+            f"面部: {face_str} ｜ 声音: {aud_str} ｜ 文本: {txt_str} ｜ 覆盖率: {cov_val:.0%} ｜ 冲突: {disagree_val} ｜ 熵: {data['predictive_entropy']:.3f}"
         )
 
-        # 更新决策依据 (显式呈现面部与声学情绪感知证据)
+        # 更新决策依据 (显式呈现三模态线索 + 多源不确定性 + 反馈趋势 + 策略推导)
         zh_reasons = [
-            f"• 【面部线索】人脸表情主导判定为【{face_str}】(人脸置信度: {data['face_signal_quality']:.1%})",
-            f"• 【声音线索】语音情绪主导判定为【{aud_str}】",
-            f"• 【模态融合】跨模态冲突度 {disagree_val} ｜ 信息熵 {data['predictive_entropy']:.3f} ｜ 综合倾向【{zh_fused}】",
+            f"• 【三模态线索】面部[{face_str}](置信度 {data['face_signal_quality']:.0%}) ｜ 声音[{aud_str}] ｜ 文本[{txt_str}]",
+            f"• 【多源不确定性】覆盖率 {cov_val:.0%} ｜ 跨模态冲突 {disagree_val} ｜ 时序波动 {instab_val:.3f} ｜ 预测熵 {data['predictive_entropy']:.3f} → 综合倾向【{zh_fused}】",
+            f"• 【会话反馈追踪】上轮效价反馈：{eff_str}",
         ]
         for r in data["policy_reasons"]:
             zh_reasons.append(f"• 【策略推理逻辑】{translate_reason(r)}")
 
         if data["cross_modal_disagreement"] and data["cross_modal_disagreement"] > 0.35:
-            zh_reasons.insert(3, f"• ⚠️ 【冲突应对机制】检测到显著跨模态冲突 (冲突度 {disagree_val})，策略采取审慎试探介入")
+            zh_reasons.insert(2, f"• ⚠️ 【冲突应对机制】检测到显著跨模态冲突 (冲突度 {disagree_val})，策略采取审慎试探介入")
 
         self.rationale_var.set("\n".join(zh_reasons))
 
@@ -860,35 +877,13 @@ class StrategyAppV4:
         if turn_idx == 1:
             self.history_text.delete("1.0", "end")
 
-        tag_name = f"turn_{turn_idx}"
         ev_title = "🗣️ 说话响应" if data["user_initiated"] else "⏳ 静默留白"
         card_content = (
             f"【轮次 {turn_idx:02d} ｜ {ev_title}】\n"
             f"  言语内容: \"{data['transcript']}\"\n"
             f"  策略决策: [{theme['zh']}] -> {zh_act}\n"
-            f"  感知特征: 面部[{face_str}] 声音[{aud_str}]\n"
-            f"  模态参数: 冲突度 {disagree_val} ｜ 熵 {data['predictive_entropy']:.3f}\n"
-            f"--------------------------------------------------\n"
-        )
-        self.history_text.insert("end", card_content)
-        self.history_text.see("end")
-        self.history_text.config(state="disabled")
-
-        self.status_bar_var.set(f"第 {turn_idx} 轮策略已执行完毕 ｜ 累计交互记录正常沉淀中")
-
-        # 追加到历史记录文本框
-        self.history_text.config(state="normal")
-        if turn_idx == 1:
-            self.history_text.delete("1.0", "end")
-
-        tag_name = f"turn_{turn_idx}"
-        ev_title = "🗣️ 说话响应" if data["user_initiated"] else "⏳ 静默留白"
-        card_content = (
-            f"【轮次 {turn_idx:02d} ｜ {ev_title}】\n"
-            f"  言语内容: \"{data['transcript']}\"\n"
-            f"  策略决策: [{theme['zh']}] -> {zh_act}\n"
-            f"  感知特征: 面部[{face_str}] 声音[{aud_str}]\n"
-            f"  模态参数: 冲突度 {disagree_val} ｜ 熵 {data['predictive_entropy']:.3f}\n"
+            f"  感知特征: 面部[{face_str}] 声音[{aud_str}] 文本[{txt_str}]\n"
+            f"  模态参数: 覆盖率 {cov_val:.0%} ｜ 冲突度 {disagree_val} ｜ 波动 {instab_val:.3f} ｜ 熵 {data['predictive_entropy']:.3f}\n"
             f"--------------------------------------------------\n"
         )
         self.history_text.insert("end", card_content)
