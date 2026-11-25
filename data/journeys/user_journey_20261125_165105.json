@@ -1,0 +1,70 @@
+{
+  "session_id": "20261125_165105",
+  "export_time": "2026-11-25T16:51:05.800335",
+  "total_turns": 2,
+  "default_need": "UNKNOWN",
+  "turns": [
+    {
+      "turn_index": 1,
+      "timestamp": 1795596641.3218727,
+      "event_type": "prolonged_silence",
+      "user_initiated": false,
+      "user_need": "UNKNOWN",
+      "transcript": "[沉默无言语]",
+      "face_dominant_emotion": "neutral",
+      "face_signal_quality": 0.9240277485644564,
+      "audio_dominant_emotion": "N/A",
+      "text_dominant_emotion": "N/A",
+      "data_coverage": 0.3333333333333333,
+      "temporal_instability": 0.0,
+      "cross_modal_disagreement": 0.0,
+      "predictive_entropy": 0.9037024923960113,
+      "top_two_margin": 0.04192756759148958,
+      "overall_signal_quality": 0.9240277485644564,
+      "fused_dominant_emotion": "neutral",
+      "fused_valence": -0.058496016552836344,
+      "fused_arousal": 0.4343210849941747,
+      "observed_feedback_effect": "unknown",
+      "policy_mode": "WAIT",
+      "policy_action": "Question",
+      "policy_intensity": "none",
+      "epistemic_style": "non_committal",
+      "policy_reasons": [
+        "early interaction favors exploration through a question",
+        "available evidence is insufficient for a committed affect claim",
+        "passive observation is preferable when no response was requested"
+      ]
+    },
+    {
+      "turn_index": 2,
+      "timestamp": 1795596652.5952,
+      "event_type": "prolonged_silence",
+      "user_initiated": false,
+      "user_need": "UNKNOWN",
+      "transcript": "[沉默无言语]",
+      "face_dominant_emotion": "fear",
+      "face_signal_quality": 0.8662287845449933,
+      "audio_dominant_emotion": "N/A",
+      "text_dominant_emotion": "N/A",
+      "data_coverage": 0.3333333333333333,
+      "temporal_instability": 0.43505148621726386,
+      "cross_modal_disagreement": 0.0,
+      "predictive_entropy": 0.8576426854095005,
+      "top_two_margin": 0.005863501342761923,
+      "overall_signal_quality": 0.8662287845449933,
+      "fused_dominant_emotion": "fear",
+      "fused_valence": -0.09632799453102527,
+      "fused_arousal": 0.607943933752617,
+      "observed_feedback_effect": "unchanged",
+      "policy_mode": "WAIT",
+      "policy_action": "Reflection of Feelings",
+      "policy_intensity": "none",
+      "epistemic_style": "non_committal",
+      "policy_reasons": [
+        "early negative affect favors reflection of feelings",
+        "available evidence is insufficient for a committed affect claim",
+        "passive observation is preferable when no response was requested"
+      ]
+    }
+  ]
+}
