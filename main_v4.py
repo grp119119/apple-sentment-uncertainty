@@ -26,8 +26,8 @@ import cv2
 import numpy as np
 from PIL import Image, ImageTk
 
-from affective_v03.models import AffectLabel, UserNeed
-from affective_v04.labels_zh import (
+from affective.models import AffectLabel, UserNeed
+from affective.labels_zh import (
     ACTION_LABELS,
     EMOTION_LABELS,
     INTENSITY_LABELS,
@@ -35,7 +35,7 @@ from affective_v04.labels_zh import (
     NEED_LABELS,
     translate_reason,
 )
-from affective_v04.perception.stream_coordinator import (
+from affective.perception.stream_coordinator import (
     InteractiveSessionRunner,
     TurnEvent,
     TurnEventType,

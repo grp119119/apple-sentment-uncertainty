@@ -3,11 +3,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from affective_v03.models import PolicyContext, ScenarioEmotion, StudyFeedback
-from affective_v03.multimodal import Modality, ModalityEvidence, MultimodalObservation
-from affective_v03.pipeline import AffectiveInterventionPipeline
-from affective_v03.policy import UncertaintyAwarePolicy
-from affective_v03.session import ExperimentSession, StudyMetadata
+from affective.models import PolicyContext, ScenarioEmotion, StudyFeedback
+from affective.multimodal import Modality, ModalityEvidence, MultimodalObservation
+from affective.pipeline import AffectiveInterventionPipeline
+from affective.policy import UncertaintyAwarePolicy
+from affective.session import ExperimentSession, StudyMetadata
 
 
 class SessionTests(unittest.TestCase):

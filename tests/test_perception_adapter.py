@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import unittest
 
-from affective_v03.models import AffectLabel, PolicyContext
-from affective_v03.policy import UncertaintyAwarePolicy
-from affective_v04.perception.adapter import (
+from affective.models import AffectLabel, PolicyContext
+from affective.policy import UncertaintyAwarePolicy
+from affective.perception.adapter import (
     EMOTION2VEC_9_MAP,
     HSEMOTION_8_MAP,
     build_observation_from_records,
@@ -14,7 +14,7 @@ from affective_v04.perception.adapter import (
     record_to_evidence,
     safe_fuse_records,
 )
-from affective_v04.perception.contracts import (
+from affective.perception.contracts import (
     PerceptionModality,
     PerceptionRecord,
     PerceptionSource,

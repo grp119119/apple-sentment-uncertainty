@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
-from affective_v03.config import load_policy_configuration
-from affective_v03.models import (
+from affective.config import load_policy_configuration
+from affective.models import (
     AffectEstimate,
     AffectLabel,
     HistoryRecord,
@@ -17,10 +17,10 @@ from affective_v03.models import (
     UncertaintyProfile,
     UserNeed,
 )
-from affective_v03.policy import UncertaintyAwarePolicy
-from affective_v03.realizer import realize_response
-from affective_v03.scenarios import DEMONSTRATION_ONLY
-from affective_v03.uncertainty import normalized_entropy, top_two_margin
+from affective.policy import UncertaintyAwarePolicy
+from affective.realizer import realize_response
+from affective.scenarios import DEMONSTRATION_ONLY
+from affective.uncertainty import normalized_entropy, top_two_margin
 
 
 ROOT = Path(__file__).resolve().parent.parent

@@ -7,7 +7,7 @@ import csv
 import json
 from pathlib import Path
 
-from affective_v03.models import AffectLabel, ScenarioEmotion
+from affective.models import AffectLabel, ScenarioEmotion
 
 
 TURN_LABELS = {item.value for item in AffectLabel}

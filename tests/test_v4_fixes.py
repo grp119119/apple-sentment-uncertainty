@@ -3,8 +3,8 @@
 import unittest
 import numpy as np
 
-from affective_v04.perception.audio_detector import clean_sensevoice_output
-from affective_v04.perception.stream_coordinator import (
+from affective.perception.audio_detector import clean_sensevoice_output
+from affective.perception.stream_coordinator import (
     RealtimeVADTracker,
     TurnEventType,
     TurnEvent,

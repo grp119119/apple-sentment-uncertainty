@@ -21,7 +21,7 @@ subprocess.check_output = _safe_check_output
 
 import numpy as np
 
-from affective_v03.models import AffectLabel
+from affective.models import AffectLabel
 from .adapter import EMOTION2VEC_9_MAP, map_raw_scores_to_ekman
 from .contracts import (
     PerceptionModality,

@@ -62,32 +62,34 @@ PILOT_DRAFT_NOT_VALIDATED
 
 ## 文件结构
 
-- `affective_v03/models.py`：标签、状态和决策数据结构。
-- `affective_v03/multimodal.py`：多模态输入合同。
-- `affective_v03/uncertainty.py`：不确定性与校准指标。
-- `affective_v03/fusion.py`：透明 late fusion。
-- `affective_v03/support.py`：ESConv 二级支持动作选择。
-- `affective_v03/policy.py`：实验 baseline 与 uncertainty-aware policy。
-- `affective_v03/realizer.py`：受控中文回应。
-- `affective_v03/pipeline.py`：完整决策管线。
-- `affective_v03/session.py`：schema v3 实验记录。
-- `tests/`：架构、策略隔离、校准和日志测试。
+- `affective/models.py`：标签、状态和决策数据结构。
+- `affective/multimodal.py`：多模态输入合同。
+- `affective/uncertainty.py`：不确定性与校准指标。
+- `affective/fusion.py`：透明 late fusion。
+- `affective/support.py`：ESConv 二级支持动作选择。
+- `affective/policy.py`：实验 baseline 与 uncertainty-aware policy。
+- `affective/history.py`：有界会话历史状态机。
+- `affective/realizer.py`：受控中文回应。
+- `affective/pipeline.py`：完整决策管线。
+- `affective/session.py`：schema v3 实验记录。
+- `affective/simulation.py` & `affective/labels_zh.py`：手动模拟适配与中文界面标签。
+- `affective/perception/`：实时多模态感知层（YuNet + HSEmotion + SenseVoice + emotion2vec + VAD 轮次调度）。
+- `tests/`：架构、策略隔离、校准、实时感知和日志测试。
 
 ## 运行
 
 ```powershell
-python main.py                  # v4.1 中文数值模拟测试面板
-python main_v4.py               # 同上，显式版本入口
-python main_v3.py               # 保留的 v0.3 实验界面
-python smoke_demo.py            # 无界面冒烟验证
+python main.py                  # 启动实时多模态交互面板 (等同 main_v4.py)
+python main_v4.py               # 实时多模态交互面板 (摄像头 + 麦克风)
+python main_v4_manual_sim.py    # 中文数值手动模拟测试面板
+python run_live_interaction.py  # 命令行实时交互模式
+python debug_audio.py           # 麦克风与语音识别诊断工具
 python experiment_runner.py     # 双条件批量演示/输入运行
 python calibration_runner.py data/v0_3_experiment.json
 python dataset_validator.py normalized_dataset.json
 python -m unittest discover -s tests -v
 ```
 
-仅使用 Python 标准库，不会在线学习或根据正式实验反馈更改 policy。
-
-`affective_v03/scenarios.py` 中的演示输入只用于确认代码管线能够运行，不能作为研究数据、
+`affective/scenarios.py` 中的演示输入只用于确认代码管线能够运行，不能作为研究数据、
 阈值来源或实验结果。正式研究必须接入官方数据集或经过伦理流程采集的真实数据，并保存
 数据集版本、标签来源和划分信息。

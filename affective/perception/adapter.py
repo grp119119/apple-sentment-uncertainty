@@ -5,9 +5,9 @@ from __future__ import annotations
 import time
 from typing import Mapping, Sequence
 
-from affective_v03.fusion import FusionResult, fuse_observation
-from affective_v03.models import AffectLabel, normalize_distribution
-from affective_v03.multimodal import Modality, ModalityEvidence, MultimodalObservation
+from affective.fusion import FusionResult, fuse_observation
+from affective.models import AffectLabel, normalize_distribution
+from affective.multimodal import Modality, ModalityEvidence, MultimodalObservation
 from .contracts import (
     PerceptionModality,
     PerceptionRecord,

@@ -1,7 +1,7 @@
 import unittest
 
-from affective_v03.models import InterventionMode, PolicyContext, UserNeed
-from affective_v04.simulation import ManualSimulationInput, run_manual_simulation
+from affective.models import InterventionMode, PolicyContext, UserNeed
+from affective.simulation import ManualSimulationInput, run_manual_simulation
 
 
 def simulation_input(distribution, **overrides):

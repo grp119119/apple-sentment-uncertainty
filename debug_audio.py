@@ -117,7 +117,7 @@ def main():
 
     # 调用本地模型推理
     try:
-        from affective_v04.perception.audio_detector import AudioEmotionDetector
+        from affective.perception.audio_detector import AudioEmotionDetector
         det = AudioEmotionDetector()
         aud_rec, txt_rec = det.analyze_audio(wav_path, language="zh")
 

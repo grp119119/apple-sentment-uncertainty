@@ -3,7 +3,7 @@ import unittest
 from calibration_runner import build_report
 from dataset_validator import validate_row
 from experiment_runner import run_comparison
-from affective_v03.scenarios import demonstration_scenarios
+from affective.scenarios import demonstration_scenarios
 
 
 class ToolTests(unittest.TestCase):

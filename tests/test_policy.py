@@ -1,6 +1,6 @@
 import unittest
 
-from affective_v03.models import (
+from affective.models import (
     AffectEstimate,
     HistoryEffect,
     HistoryRecord,
@@ -12,8 +12,8 @@ from affective_v03.models import (
     UncertaintyProfile,
     UserNeed,
 )
-from affective_v03.policy import EmotionOnlyPolicy, UncertaintyAwarePolicy
-from affective_v03.realizer import realize_response
+from affective.policy import EmotionOnlyPolicy, UncertaintyAwarePolicy
+from affective.realizer import realize_response
 
 
 def affect(arousal=0.6):

@@ -25,15 +25,15 @@ from typing import Callable, Mapping, Sequence
 
 import numpy as np
 
-from affective_v03.history import update_history
-from affective_v03.models import (
+from affective.history import update_history
+from affective.models import (
     AffectLabel,
     HistoryEffect,
     HistoryRecord,
     InterventionDecision,
     UserNeed,
 )
-from affective_v03.policy import PolicyContext, UncertaintyAwarePolicy
+from affective.policy import PolicyContext, UncertaintyAwarePolicy
 from .adapter import safe_fuse_records
 from .audio_detector import AudioEmotionDetector
 from .contracts import (

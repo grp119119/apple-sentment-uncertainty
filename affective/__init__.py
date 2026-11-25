@@ -1,4 +1,4 @@
-"""Evidence-driven affective intervention prototype v0.3."""
+"""Uncertainty-aware adaptive affective intervention engine and multimodal perception."""
 
 from .models import (
     AffectEstimate,
@@ -16,6 +16,7 @@ from .models import (
 from .history import update_history
 from .pipeline import AffectiveInterventionPipeline, PipelineResult
 from .policy import EmotionOnlyPolicy, UncertaintyAwarePolicy
+from .simulation import ManualSimulationInput, ManualSimulationResult, run_manual_simulation
 
 __all__ = [
     "AffectEstimate",
@@ -27,11 +28,14 @@ __all__ = [
     "InterventionDecision",
     "InterventionIntensity",
     "InterventionMode",
+    "ManualSimulationInput",
+    "ManualSimulationResult",
     "PipelineResult",
     "PolicyContext",
     "SupportAction",
     "UncertaintyAwarePolicy",
     "UncertaintyProfile",
     "UserNeed",
+    "run_manual_simulation",
     "update_history",
 ]

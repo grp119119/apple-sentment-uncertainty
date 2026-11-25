@@ -5,13 +5,13 @@ import unittest
 
 import numpy as np
 
-from affective_v03.models import AffectLabel, UserNeed
-from affective_v04.perception.contracts import (
+from affective.models import AffectLabel, UserNeed
+from affective.perception.contracts import (
     PerceptionModality,
     PerceptionRecord,
     PerceptionSource,
 )
-from affective_v04.perception.stream_coordinator import (
+from affective.perception.stream_coordinator import (
     InteractiveSessionRunner,
     RealtimeVADTracker,
     TurnEvent,

@@ -5,8 +5,8 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from affective_v03.history import update_history
-from affective_v03.models import (
+from affective.history import update_history
+from affective.models import (
     AffectLabel,
     HistoryEffect,
     HistoryRecord,
@@ -16,7 +16,7 @@ from affective_v03.models import (
     TimePressure,
     UserNeed,
 )
-from affective_v04.labels_zh import (
+from affective.labels_zh import (
     ACTION_LABELS,
     EMOTION_LABELS,
     INTENSITY_LABELS,
@@ -24,7 +24,7 @@ from affective_v04.labels_zh import (
     NEED_LABELS,
     translate_reason,
 )
-from affective_v04.simulation import ManualSimulationInput, ManualSimulationResult, run_manual_simulation
+from affective.simulation import ManualSimulationInput, ManualSimulationResult, run_manual_simulation
 
 
 BG = "#F4F7FB"

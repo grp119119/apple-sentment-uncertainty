@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Mapping
 
-from affective_v03.models import AffectLabel
+from affective.models import AffectLabel
 
 
 class PerceptionModality(str, Enum):

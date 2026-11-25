@@ -1,7 +1,7 @@
 import unittest
 
-from affective_v03.history import update_history
-from affective_v03.models import (
+from affective.history import update_history
+from affective.models import (
     EpistemicStyle,
     HistoryEffect,
     HistoryRecord,

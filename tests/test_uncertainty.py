@@ -1,7 +1,7 @@
 import unittest
 
-from affective_v03.models import AffectLabel
-from affective_v03.uncertainty import (
+from affective.models import AffectLabel
+from affective.uncertainty import (
     brier_score,
     expected_calibration_error,
     normalized_entropy,

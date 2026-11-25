@@ -1,9 +1,9 @@
 import unittest
 
-from affective_v03.models import InterventionMode, PolicyContext
-from affective_v03.multimodal import Modality, ModalityEvidence, MultimodalObservation
-from affective_v03.pipeline import AffectiveInterventionPipeline
-from affective_v03.policy import EmotionOnlyPolicy, UncertaintyAwarePolicy
+from affective.models import InterventionMode, PolicyContext
+from affective.multimodal import Modality, ModalityEvidence, MultimodalObservation
+from affective.pipeline import AffectiveInterventionPipeline
+from affective.policy import EmotionOnlyPolicy, UncertaintyAwarePolicy
 
 
 def observation():

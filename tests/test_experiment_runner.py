@@ -7,7 +7,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from affective_v03.scenarios import DEMONSTRATION_ONLY, demonstration_scenarios
+from affective.scenarios import DEMONSTRATION_ONLY, demonstration_scenarios
 from experiment_runner import main, run_all_comparisons, run_comparison
 
 

@@ -27,8 +27,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from affective_v03.models import UserNeed
-from affective_v04.perception.stream_coordinator import (
+from affective.models import UserNeed
+from affective.perception.stream_coordinator import (
     InteractiveSessionRunner,
     TurnEvent,
     TurnEventType,
