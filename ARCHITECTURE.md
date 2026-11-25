@@ -1,62 +1,40 @@
-# v0.3 决策架构
+# 情感介入原型怎么工作
 
-## 数据流
+系统每轮先估计用户的情绪，再看这次判断有多把握，最后决定要不要介入、怎么开口。实时版从摄像头和麦克风取数据，手动版可以直接填数值看规则怎么走。
 
-```text
-Text / Voice / Face / Physiology
-                 |
-                 v
-      quality-weighted fusion
-                 |
-        +--------+--------+
-        |                 |
-        v                 v
-  AffectEstimate   UncertaintyProfile
-  distribution     entropy
-  V/A(/D)          margin
-                   quality/coverage
-                   variance/temporal change
-        |                 |
-        +--------+--------+
-                 v
-         InterventionPolicy
-        /                   \
-EmotionOnly            UncertaintyAware
-        \                   /
-         v                 v
-       Mode + Intensity + EpistemicStyle
-                 |
-                 v
-       ESConv SupportAction
-                 |
-                 v
-        Controlled Response
-                 |
-                 v
-         Schema v3 Study Log
-```
+## 从哪里启动
 
-## 冻结边界
+| 想做什么 | 运行哪个文件 | 会看到什么 |
+| --- | --- | --- |
+| 用摄像头和麦克风实时体验 | `python main_v4.py` | 启动桌面面板，显示语音转写、情绪估计和每轮策略结果 |
+| 在终端体验实时交互 | `python run_live_interaction.py` | 使用同一个实时轮次处理器，在终端打印结果，退出时导出会话记录 |
+| 手动试试某组输入会触发什么 | `python main_v4_manual_sim.py` | 填情绪概率、信号质量等数值，选择需要哪种帮助，查看决策和中文回应，再记录这一轮的反馈 |
+| 比较两套策略 | `python experiment_runner.py --all` | 把同一批演示场景分别交给两套策略，输出决策对照。也可以用 `--input` 传入自己的观测 JSON |
 
-v0.3 正式实验界面的 `StudyFeedback` 仍只写入日志。v4.1 手动测试面板另行使用
-`HistoryRecord` 保存使用者明确选择的 Need 和本轮反馈，并作为下一轮的状态输入。
-History 只能在固定规则下排除被拒绝动作、保存偏好与重复次数；它不会在运行时修改
-阈值、规则或 Policy 版本。
+## 实时版怎么处理一轮
 
-形成性研究完成后，需要：
+1. **先判断这一轮何时结束。** `affective/perception/stream_coordinator.py` 根据麦克风音量判断有没有人说话。说完或长时间安静都能触发一轮。说话时取对应时间段的人脸结果，静默时取最近几秒的人脸结果。
+2. **再看脸和听声音。** 摄像头用 YuNet 找脸，用 HSEmotion 估计表情。麦克风用 emotion2vec+ 估计声音里的情绪，用 SenseVoiceSmall 做转写。转写用于展示和过滤没有识别到有效文字的说话轮次。实时情绪融合只接收人脸和声音。通用输入结构也能接收已经算好分数的文本和生理信号。
+3. **把可用证据放在一起。** `affective/fusion.py` 按信号质量加权，质量越高，权重越大。它保留六种情绪加中性的完整概率分布，并汇总效价和唤醒度。有支配度输入时也会汇总。实时版如果两路证据都不可用，就用均匀分布占位，并把信号质量和覆盖率都设为零。
+4. **看看这次判断有多把握。** `affective/uncertainty.py` 会看概率是不是分散（预测熵）、前两名是不是很接近、信号质量和覆盖率怎么样。它也能用多次预测估计方差、用上一轮分布计算变化，以及用广义 Jensen–Shannon 散度衡量不同来源的分歧。实时入口没有传入上一轮分布，也没有保留缺失来源占位，所以只剩一路有效输入时，覆盖率仍可能是 100%。
 
-1. 替换 `PilotThresholds`；
-2. 更新 policy version；
-3. 将 calibration status 改为 `FROZEN_V1`；
-4. 保存冻结配置和测试快照；
-5. 正式实验只读取冻结配置。
+## 决定要不要开口
 
-## 尚未宣称解决的问题
+两套策略在 `affective/policy.py`。它们共用 `affective/support.py` 的支持动作选择规则，例如先问一句、复述感受、安慰或提个建议。两套策略都遵守暂停、用户接受度和安全开关，公开场合都会降低介入强度。
 
-- 不宣称当前 fusion 权重最优；
-- 不宣称 JSD 是 affective modality conflict 的最终指标；
-- 不宣称阈值适用于真实设备；
-- 不把自动识别结果当作临床诊断；
-- 不使用反馈做在线强化学习；
-- 不把 Context、History、Need 或 Persona 发展为并列主贡献。
-- 不把手动输入的用户文字宣称为已经自动识别；本地 Need 模型尚未接入。
+- **`EmotionOnlyPolicy`。** 对照策略。通过共同边界检查后直接介入，选动作时看情绪和交互情境，不读取不确定性指标。
+- **`UncertaintyAwarePolicy`。** 边界检查未通过时先暂停（`DEFER`）。证据太少或判断太模糊时，用户已经开口就先问一句确认（`CONFIRM`），否则先等（`WAIT`）。有一些不确定时，用留有余地的方式回应（`TENTATIVE`）。证据够清楚时直接回应（`DIRECT`）。跨模态分歧达到试用阈值时，也能触发试探式回应。
+
+一轮决策会给出介入方式、强度、支持动作、表达口吻和理由。手动面板和双条件运行器用 `affective/realizer.py` 的固定中文模板生成回应。实时入口输出的是策略结果和轮次记录。
+
+## 需求和反馈怎么带到下一轮
+
+手动面板直接用填写的情绪分布算熵和前两名差距，用填写的质量和覆盖率做判断。疲惫程度和用户原话只保留在本轮结果中，需求由用户手选。方差、时间变化和不同来源的分歧在手动面板里未启用。
+
+点下「记录反馈」后，`HistoryRecord` 会记住明确选过的需求、上一轮动作和效果、重复次数，以及被拒绝的动作。下一轮走需求匹配规则时，可以沿用有效的动作、避开曾被拒绝的动作，或在同一个动作重复且没有改善时尝试换一个。实时版也更新这份会话状态，当前每轮按「接受、效果不变」记账。两边都按固定规则更新会话状态，策略阈值不会跟着改。
+
+## 记录和阈值
+
+- **实时会话记录。** 桌面面板结束会话时会询问是否导出，命令行版退出时保存。文件写到 `data/journeys/`，记录每轮转写、情绪摘要、策略结果和理由。
+- **研究日志。** `affective/session.py` 提供 `schema_version: 3` 的读写接口，可以保存实验条件、轮次结果和 `StudyFeedback` 评分。评分在这条路径只写入日志。`calibration_runner.py` 读取这类日志，按实验条件和介入方式汇总反馈和预测熵。实时会话导出和双条件运行器各有自己的 JSON 格式。
+- **当前阈值。** 手动面板和双条件运行器从 `config/policy_thresholds.json` 读阈值，实时版默认用代码里的 `PilotThresholds`。两处当前默认数值相同，策略状态为 `PILOT_DRAFT_NOT_VALIDATED`。形成性研究后要审定阈值、更新策略版本，并保存冻结配置和对应的测试快照。当前加载器没有强制检查 `FROZEN_V1`，汇总脚本也不会自动调整阈值。

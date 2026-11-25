@@ -79,7 +79,6 @@ PILOT_DRAFT_NOT_VALIDATED
 ## 运行
 
 ```powershell
-python main.py                  # 启动实时多模态交互面板 (等同 main_v4.py)
 python main_v4.py               # 实时多模态交互面板 (摄像头 + 麦克风)
 python main_v4_manual_sim.py    # 中文数值手动模拟测试面板
 python run_live_interaction.py  # 命令行实时交互模式
