@@ -157,6 +157,143 @@ class TestV4Fixes(unittest.TestCase):
         # 导出的 WAV 中必须保留高能量语音帧，峰值绝不能被尾随的 0.0 覆写为空
         self.assertGreater(float(np.max(np.abs(pcm))), 0.20)
 
+    def test_text_lexicon_affect_and_negation(self):
+        from affective.models import AffectLabel
+        from affective.perception.audio_detector import estimate_text_affect
+
+        dist_joy, q_joy, _ = estimate_text_affect("我现在感觉非常的开心。")
+        self.assertEqual(max(dist_joy, key=dist_joy.get), AffectLabel.JOY)
+        self.assertGreater(q_joy, 0.7)
+
+        dist_neg, _, _ = estimate_text_affect("我今天一点也不开心。")
+        self.assertEqual(max(dist_neg, key=dist_neg.get), AffectLabel.SADNESS)
+
+        dist_fear, _, _ = estimate_text_affect("最近毕设压力大，感觉时间来不及，有点焦虑。")
+        self.assertEqual(max(dist_fear, key=dist_fear.get), AffectLabel.FEAR)
+
+        dist_fact, q_fact, _ = estimate_text_affect("开放时间早上9点至下午5点。")
+        self.assertEqual(max(dist_fact, key=dist_fact.get), AffectLabel.NEUTRAL)
+        self.assertAlmostEqual(q_fact, 0.50, places=2)
+
+    def test_silence_face_only_coverage_triggers_wait_and_temporal_feedback(self):
+        """Verify 4 runtime policy fixes:
+        1. Face-only prolonged silence has data_coverage=1/3 (< 0.5) -> WAIT (never intrusive DIRECT).
+        2. Default UserNeed.UNKNOWN allows affect-led action selection.
+        3. temporal_instability > 0 when affect shifts between turns.
+        4. observed_feedback_effect dynamically detects IMPROVED on positive valence shift.
+        """
+        import time
+        from unittest.mock import MagicMock
+        from affective.models import AffectLabel, UserNeed
+        from affective.perception.contracts import PerceptionModality, PerceptionRecord, PerceptionSource
+        from affective.perception.stream_coordinator import InteractiveSessionRunner
+
+        mock_audio = MagicMock()
+        runner = InteractiveSessionRunner(audio_detector=mock_audio, default_need=UserNeed.UNKNOWN)
+        now = time.time()
+
+        # Turn 1: 静默超时，仅摄像头检测到清晰的悲伤人脸 (1/3 模态覆盖 -> coverage=0.333 < 0.50 -> WAIT)
+        sad_face = PerceptionRecord(
+            modality=PerceptionModality.VISUAL,
+            source=PerceptionSource.CAMERA,
+            model_name="mock",
+            model_version="1.0",
+            timestamp=now,
+            raw_scores={},
+            mapped_scores={AffectLabel.SADNESS: 0.90, AffectLabel.NEUTRAL: 0.10},
+            signal_quality=0.92,
+            available=True,
+        )
+        runner.visual_buffer.add_record(sad_face, timestamp=now)
+        turn1 = runner.handle_turn_event(
+            TurnEvent(event_type=TurnEventType.PROLONGED_SILENCE, timestamp=now, idle_duration=10.0)
+        )
+        self.assertAlmostEqual(turn1["data_coverage"], 1.0 / 3.0, places=3)
+        self.assertEqual(turn1["policy_mode"], "WAIT")
+        self.assertEqual(turn1["temporal_instability"], 0.0)
+
+        # Turn 2: 用户主动开口说“我现在感觉非常开心”，三模态全到齐且情绪由悲转喜
+        joy_dist = {AffectLabel.JOY: 0.85, AffectLabel.NEUTRAL: 0.15}
+        joy_face = PerceptionRecord(
+            modality=PerceptionModality.VISUAL,
+            source=PerceptionSource.CAMERA,
+            model_name="mock",
+            model_version="1.0",
+            timestamp=now + 5.0,
+            raw_scores={},
+            mapped_scores=joy_dist,
+            signal_quality=0.90,
+            available=True,
+        )
+        runner.visual_buffer.add_record(joy_face, timestamp=now + 5.0)
+        mock_audio.analyze_audio.return_value = (
+            PerceptionRecord(
+                modality=PerceptionModality.AUDIO,
+                source=PerceptionSource.MICROPHONE,
+                model_name="mock_ser",
+                model_version="1.0",
+                timestamp=now + 5.0,
+                raw_scores={},
+                mapped_scores=joy_dist,
+                signal_quality=0.88,
+                available=True,
+            ),
+            PerceptionRecord(
+                modality=PerceptionModality.TEXT,
+                source=PerceptionSource.ASR,
+                model_name="mock_text",
+                model_version="1.0",
+                timestamp=now + 5.0,
+                raw_scores={},
+                mapped_scores=joy_dist,
+                signal_quality=0.82,
+                available=True,
+                transcript="我现在感觉非常开心。",
+            ),
+        )
+        turn2 = runner.handle_turn_event(
+            TurnEvent(
+                event_type=TurnEventType.SPEECH_FINISHED,
+                timestamp=now + 5.0,
+                speech_start=now + 3.0,
+                speech_end=now + 5.0,
+                audio_wav_path="/tmp/nonexistent_mock.wav",
+            )
+        )
+        self.assertAlmostEqual(turn2["data_coverage"], 1.0, places=3)
+        self.assertGreater(turn2["temporal_instability"], 0.55)
+        self.assertEqual(turn2["observed_feedback_effect"], "improved")
+        # 情绪由悲转喜触发高时序波动 -> TENTATIVE，且探索阶段以 Question 试探
+        self.assertEqual(turn2["policy_mode"], "TENTATIVE")
+        self.assertEqual(turn2["policy_action"], "Question")
+
+        # Turn 3: 进入 SUPPORTING 支持阶段，三模态持续稳定愉悦 -> temporal_instability=0 -> DIRECT + Affirmation
+        runner.visual_buffer.add_record(joy_face, timestamp=now + 10.0)
+        turn3 = runner.handle_turn_event(
+            TurnEvent(
+                event_type=TurnEventType.SPEECH_FINISHED,
+                timestamp=now + 10.0,
+                speech_start=now + 8.0,
+                speech_end=now + 10.0,
+                audio_wav_path="/tmp/nonexistent_mock.wav",
+            )
+        )
+        self.assertEqual(turn3["policy_mode"], "DIRECT")
+        self.assertEqual(turn3["policy_action"], "Affirmation and Reassurance")
+        self.assertIn("positive affect favors affirmation", turn3["policy_reasons"])
+
+    def test_autonomy_boundary_scenario_available_in_experiment_runner(self):
+        from affective.scenarios import demonstration_scenarios
+        from experiment_runner import run_comparison
+
+        scenarios = demonstration_scenarios()
+        self.assertIn("低不确定静默悲伤（自主权边界）", scenarios)
+        obs = scenarios["低不确定静默悲伤（自主权边界）"]
+        res_receptive = run_comparison(obs, user_initiated=False, receptive=True)
+        res_not_receptive = run_comparison(obs, user_initiated=False, receptive=False)
+        self.assertEqual(res_receptive["summary"]["uncertainty_aware"]["mode"], "DIRECT")
+        self.assertEqual(res_not_receptive["summary"]["uncertainty_aware"]["mode"], "DEFER")
+
 
 if __name__ == "__main__":
     unittest.main()

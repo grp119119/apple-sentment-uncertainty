@@ -49,4 +49,12 @@ def demonstration_scenarios() -> dict[str, MultimodalObservation]:
                 _e(Modality.FACE, {}, 0.0, 0.0, available=False),
             )
         ),
+        # Study 1 自主权边界专项测试场景：低不确定性悲伤 + 非用户主动发起 (--no-user-initiated)
+        # 用于检验不同 receptivity (True/False) 组合下 DIRECT 是否符合用户自主权与低侵入设计
+        "低不确定静默悲伤（自主权边界）": MultimodalObservation(
+            (
+                _e(Modality.FACE, {"sadness": 0.86, "neutral": 0.08, "fear": 0.06}, -0.68, 0.42, quality=0.92),
+                _e(Modality.VOICE, {"sadness": 0.84, "neutral": 0.10, "fear": 0.06}, -0.64, 0.40, quality=0.90),
+            )
+        ),
     }

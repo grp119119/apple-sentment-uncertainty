@@ -31,6 +31,134 @@ from .contracts import (
 )
 
 
+_SENSEVOICE_TAG_MAP: dict[str, AffectLabel] = {
+    "HAPPY": AffectLabel.JOY,
+    "SAD": AffectLabel.SADNESS,
+    "ANGRY": AffectLabel.ANGER,
+    "FEARFUL": AffectLabel.FEAR,
+    "DISGUSTED": AffectLabel.DISGUST,
+    "SURPRISED": AffectLabel.SURPRISE,
+    "NEUTRAL": AffectLabel.NEUTRAL,
+}
+
+_ZH_TEXT_LEXICON: dict[AffectLabel, tuple[str, ...]] = {
+    AffectLabel.JOY: (
+        "开心", "高兴", "快乐", "愉快", "喜悦", "太好了", "真好", "挺好", "很好",
+        "还不错", "不错", "舒服", "轻松", "放松", "满意", "幸福", "喜欢", "哈哈",
+        "真棒", "好多了", "释怀", "安心", "温暖", "感动", "治愈", "期待", "欣慰",
+    ),
+    AffectLabel.SADNESS: (
+        "难过", "伤心", "委屈", "沮丧", "低落", "失落", "想哭", "好累", "疲惫",
+        "孤独", "寂寞", "无助", "郁闷", "绝望", "痛苦", "心酸", "难受", "糟糕",
+        "不好受", "压抑", "灰心", "遗憾", "想念", "哭", "累",
+    ),
+    AffectLabel.FEAR: (
+        "害怕", "恐惧", "焦虑", "紧张", "担心", "压力大", "压力", "心慌", "不安",
+        "恐慌", "发愁", "来不及", "不够用", "忐忑", "担忧", "纠结", "迷茫", "无措", "慌", "怕",
+    ),
+    AffectLabel.ANGER: (
+        "生气", "愤怒", "烦躁", "烦死", "很烦", "好烦", "讨厌", "气死", "恼火",
+        "火大", "抓狂", "受够了", "无语", "气愤", "暴躁", "烦人", "忍不了", "气人", "崩溃",
+    ),
+    AffectLabel.DISGUST: (
+        "恶心", "厌恶", "反感", "嫌弃", "受不了", "倒胃口",
+    ),
+    AffectLabel.SURPRISE: (
+        "惊讶", "震惊", "居然", "竟然", "没想到", "天哪", "我去", "哇塞", "意外", "不可思议",
+    ),
+}
+
+_NEGATION_PREFIXES = ("一点也不", "并没有", "不太", "并不", "不算", "不是很", "不怎么", "没那么", "不", "没")
+
+
+def estimate_text_affect(
+    clean_text: str,
+    raw_sensevoice_text: str = "",
+) -> tuple[dict[AffectLabel, float], float, dict[str, float]]:
+    """Transparent lexicon + SenseVoice tag text affect estimator (Ekman 7-class).
+
+    Explicitly avoids pretending to be a deep neural classifier; logs matched cues
+    and falls back smoothly to a calibrated neutral prior on factual utterances.
+    """
+    if not clean_text:
+        uniform = {label: 1.0 / len(AffectLabel) for label in AffectLabel}
+        return uniform, 0.0, {"lexicon_hits": 0.0}
+
+    counts: dict[AffectLabel, float] = {label: 0.0 for label in AffectLabel}
+    matched_positions: list[tuple[int, int]] = []
+    total_hits = 0
+
+    for label, keywords in _ZH_TEXT_LEXICON.items():
+        for kw in keywords:
+            start = 0
+            while True:
+                idx = clean_text.find(kw, start)
+                if idx == -1:
+                    break
+                end = idx + len(kw)
+                start = end
+                # 避免长词已匹配后被短子串重复计数 (如 "压力大" 与 "压力")
+                if any(not (end <= ms or idx >= me) for ms, me in matched_positions):
+                    continue
+                matched_positions.append((idx, end))
+                prefix_window = clean_text[max(0, idx - 4) : idx]
+                negated = any(prefix_window.endswith(neg) for neg in _NEGATION_PREFIXES)
+                if negated:
+                    if label is AffectLabel.JOY:
+                        counts[AffectLabel.SADNESS] += 1.0
+                    elif label in {AffectLabel.SADNESS, AffectLabel.FEAR, AffectLabel.ANGER, AffectLabel.DISGUST}:
+                        counts[AffectLabel.NEUTRAL] += 0.7
+                        counts[AffectLabel.JOY] += 0.3
+                    else:
+                        counts[AffectLabel.NEUTRAL] += 1.0
+                else:
+                    counts[label] += 1.0
+                total_hits += 1
+
+    # 检测 SenseVoice 原生情感标签 (<|HAPPY|>, <|SAD|> 等)
+    sv_tag_label: AffectLabel | None = None
+    for tag, target in _SENSEVOICE_TAG_MAP.items():
+        if f"<|{tag}|>" in raw_sensevoice_text:
+            sv_tag_label = target
+            break
+
+    raw_meta: dict[str, float] = {
+        "transcript_len": float(len(clean_text)),
+        "lexicon_hits": float(total_hits),
+    }
+
+    if total_hits > 0:
+        # 词典命中：0.78 权重按命中归属分配，0.22 均匀平滑保留不确定性余量
+        cue_total = sum(counts.values())
+        smooth = 0.22 / len(AffectLabel)
+        dist = {
+            label: smooth + 0.78 * (counts[label] / cue_total)
+            for label in AffectLabel
+        }
+        # 词典证据质量随命中数量平滑提升 (0.72 ~ 0.85)
+        quality = min(0.85, 0.72 + 0.06 * min(total_hits, 2))
+        for label, val in counts.items():
+            if val > 0:
+                raw_meta[f"_cue_{label.value}"] = float(val)
+        return dist, quality, raw_meta
+
+    if sv_tag_label is not None and sv_tag_label is not AffectLabel.NEUTRAL:
+        # 无显式情感词但 SenseVoice 标出非中性标签：温和先验
+        dist = {label: 0.20 / (len(AffectLabel) - 2) for label in AffectLabel}
+        dist[sv_tag_label] = 0.55
+        dist[AffectLabel.NEUTRAL] = 0.25
+        raw_meta[f"_sv_tag_{sv_tag_label.value}"] = 1.0
+        return dist, 0.55, raw_meta
+
+    # 事实/平淡语句：适度中性分布
+    non_neutral_share = 0.42 / (len(AffectLabel) - 1)
+    dist = {
+        label: (0.58 if label is AffectLabel.NEUTRAL else non_neutral_share)
+        for label in AffectLabel
+    }
+    return dist, 0.50, raw_meta
+
+
 def clean_sensevoice_output(raw_text: str) -> str:
     """Sanitize SenseVoice output: strip rich transcription tags, emojis, music icons and dangling punctuation."""
     if not raw_text:
@@ -306,17 +434,18 @@ class AudioEmotionDetector:
             latency_ms=latency,
         )
 
-        # 简单文本先验 (在后续阶段接入独立文本情感模型之前，提供安全基准)
+        # 3. 文本语义情绪估计 (透明中文情感词典 + 否定词反转 + SenseVoice 标签辅助)
         has_text = len(clean_text) > 0
+        text_dist, text_quality, text_meta = estimate_text_affect(clean_text, raw_text)
         text_record = PerceptionRecord(
             modality=PerceptionModality.TEXT,
             source=PerceptionSource.ASR,
-            model_name=self.asr_model_name,
+            model_name=f"{self.asr_model_name}+zh_lexicon_v1",
             model_version="small",
             timestamp=now,
-            raw_scores={"transcript_len": float(len(clean_text)), "raw_text": raw_text},
-            mapped_scores={label: 1.0 / len(AffectLabel) for label in AffectLabel},
-            signal_quality=0.85 if has_text else 0.0,
+            raw_scores=text_meta,
+            mapped_scores=text_dist,
+            signal_quality=text_quality if has_text else 0.0,
             available=has_text,
             missing_reason=None if has_text else "NO_VALID_SPEECH_TEXT",
             transcript=clean_text,
