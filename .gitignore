@@ -24,6 +24,8 @@ Thumbs.db
 # ---------- 临时与输出 ----------
 tmp/
 *.log
+.env
+.env.local
 
 # ---------- 模型重复文件 ----------
 models/visual/face_detection_yunet_2023mar (1).onnx

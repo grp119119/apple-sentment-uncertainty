@@ -70,27 +70,81 @@ def _need_action(context: PolicyContext) -> tuple[SupportAction, str] | None:
     return selected, reason
 
 
+_AFFECT_FALLBACK_ORDER: tuple[SupportAction, ...] = (
+    SupportAction.REFLECTION,
+    SupportAction.AFFIRMATION,
+    SupportAction.RESTATEMENT,
+    SupportAction.QUESTION,
+    SupportAction.SUGGESTION,
+    SupportAction.OTHERS,
+)
+
+
+def _apply_history_to_affect_action(
+    primary: SupportAction,
+    base_reason: str,
+    context: PolicyContext,
+) -> tuple[SupportAction, str]:
+    """Bug 3 修复：情绪驱动分支同样遵循交互历史的避拒与连续无效换招规则。"""
+    rejected = set(context.history.rejected_actions)
+    repeated_without_improvement = (
+        context.history.previous_action is primary
+        and context.history.repeat_count >= 2
+        and context.history.previous_effect is not HistoryEffect.IMPROVED
+    )
+    if repeated_without_improvement:
+        rejected.add(primary)
+
+    if primary not in rejected:
+        return primary, base_reason
+
+    fallback = next((cand for cand in _AFFECT_FALLBACK_ORDER if cand not in rejected), SupportAction.OTHERS)
+    if repeated_without_improvement:
+        return fallback, f"{base_reason}; history switches after repeated support without improvement"
+    return fallback, f"{base_reason}; history excludes a previously rejected support action"
+
+
 def select_support_action(affect: AffectEstimate, context: PolicyContext) -> tuple[SupportAction, str]:
     """Select response content without consulting perceptual uncertainty."""
     need_result = _need_action(context)
     if need_result is not None:
         return need_result
     if context.time_pressure is TimePressure.HIGH:
-        return SupportAction.INFORMATION, "high time pressure favors concise information"
+        return _apply_history_to_affect_action(
+            SupportAction.INFORMATION, "high time pressure favors concise information", context
+        )
     if context.interaction_stage in {InteractionStage.OPENING, InteractionStage.EXPLORING}:
         if affect.dominant_emotion in {AffectLabel.FEAR, AffectLabel.SADNESS, AffectLabel.ANGER}:
-            return SupportAction.REFLECTION, "early negative affect favors reflection of feelings"
-        return SupportAction.QUESTION, "early interaction favors exploration through a question"
+            return _apply_history_to_affect_action(
+                SupportAction.REFLECTION, "early negative affect favors reflection of feelings", context
+            )
+        return _apply_history_to_affect_action(
+            SupportAction.QUESTION, "early interaction favors exploration through a question", context
+        )
     if affect.dominant_emotion in {AffectLabel.FEAR, AffectLabel.SADNESS}:
         if affect.arousal >= 0.7:
-            return SupportAction.AFFIRMATION, "high-arousal fear or sadness favors reassurance"
-        return SupportAction.REFLECTION, "fear or sadness favors reflection of feelings"
+            return _apply_history_to_affect_action(
+                SupportAction.AFFIRMATION, "high-arousal fear or sadness favors reassurance", context
+            )
+        return _apply_history_to_affect_action(
+            SupportAction.REFLECTION, "fear or sadness favors reflection of feelings", context
+        )
     if affect.dominant_emotion is AffectLabel.ANGER:
-        return SupportAction.RESTATEMENT, "anger favors a non-escalating paraphrase"
+        return _apply_history_to_affect_action(
+            SupportAction.RESTATEMENT, "anger favors a non-escalating paraphrase", context
+        )
     if affect.dominant_emotion is AffectLabel.JOY:
-        return SupportAction.AFFIRMATION, "positive affect favors affirmation"
+        return _apply_history_to_affect_action(
+            SupportAction.AFFIRMATION, "positive affect favors affirmation", context
+        )
     if affect.dominant_emotion is AffectLabel.SURPRISE:
-        return SupportAction.QUESTION, "surprise favors clarification before advice"
+        return _apply_history_to_affect_action(
+            SupportAction.QUESTION, "surprise favors clarification before advice", context
+        )
     if context.interaction_stage is InteractionStage.CLOSING:
-        return SupportAction.OTHERS, "closing stage favors a brief closing response"
-    return SupportAction.SUGGESTION, "stable supporting stage allows a small suggestion"
+        return _apply_history_to_affect_action(
+            SupportAction.OTHERS, "closing stage favors a brief closing response", context
+        )
+    return _apply_history_to_affect_action(
+        SupportAction.SUGGESTION, "stable supporting stage allows a small suggestion", context
+    )

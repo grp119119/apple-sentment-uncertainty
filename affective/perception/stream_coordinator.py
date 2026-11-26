@@ -26,6 +26,7 @@ from typing import Callable, Mapping, Sequence
 import numpy as np
 
 from affective.history import update_history
+from affective.llm_adapter import LLMAdapter
 from affective.models import (
     AffectLabel,
     HistoryEffect,
@@ -35,8 +36,9 @@ from affective.models import (
     UserNeed,
 )
 from affective.policy import PolicyContext, UncertaintyAwarePolicy
+from affective.realizer import realize_response
 from .adapter import safe_fuse_records
-from .audio_detector import AudioEmotionDetector
+from .audio_detector import AudioEmotionDetector, estimate_text_affect
 from .contracts import (
     PerceptionModality,
     PerceptionRecord,
@@ -50,6 +52,7 @@ class TurnEventType(str, Enum):
 
     SPEECH_FINISHED = "speech_finished"      # 用户主动说完一句话 (VAD截断)
     PROLONGED_SILENCE = "prolonged_silence"  # 用户长时间未开口 (静默超时)
+    TEXT_INPUT = "text_input"                # 界面文字输入框手动测试
 
 
 @dataclasses.dataclass
@@ -60,6 +63,7 @@ class TurnEvent:
     speech_end: float | None = None
     audio_wav_path: str | None = None
     idle_duration: float = 0.0
+    text_input: str | None = None
 
 
 def aggregate_visual_records(
@@ -312,11 +316,14 @@ class InteractiveSessionRunner:
         audio_detector: AudioEmotionDetector | None = None,
         policy: UncertaintyAwarePolicy | None = None,
         default_need: UserNeed = UserNeed.UNKNOWN,
+        llm_adapter: LLMAdapter | None = None,
+        use_llm: bool = True,
     ) -> None:
         self.visual_detector = visual_detector or VisualEmotionDetector()
         self.audio_detector = audio_detector or AudioEmotionDetector()
         self.policy = policy or UncertaintyAwarePolicy()
         self.default_need = default_need
+        self.llm_adapter = llm_adapter if llm_adapter is not None else LLMAdapter(enabled=use_llm)
 
         self.visual_buffer = VisualWindowBuffer(self.visual_detector)
         self.vad_tracker = RealtimeVADTracker()
@@ -324,11 +331,24 @@ class InteractiveSessionRunner:
         self.turn_index: int = 0
         self.history: HistoryRecord = HistoryRecord()
         self.journey_records: list[dict] = []
-        # 跨轮追踪：用于真实计算 temporal_instability 与动态效价变化反馈 HistoryEffect
+        # 跨轮追踪：用于真实计算 temporal_instability、动态效价变化反馈 HistoryEffect 与 Need 短时衰减
         self._previous_distribution: dict[AffectLabel, float] | None = None
         self._previous_valence: float | None = None
         self._previous_decision = None
         self._previous_need: UserNeed = default_need
+        self._need_idle_turns: int = 0
+
+    def reset_session(self) -> None:
+        """Clear current session turns and cross-turn policy memory for a fresh session."""
+        self.turn_index = 0
+        self.history = HistoryRecord()
+        self.journey_records = []
+        self._previous_distribution = None
+        self._previous_valence = None
+        self._previous_decision = None
+        self._previous_need = self.default_need
+        self._need_idle_turns = 0
+        self.vad_tracker.reset_turn_timer()
 
     def _infer_observed_effect(self, current_valence: float, data_coverage: float) -> HistoryEffect:
         """Estimate affective feedback effect of the previous turn from observed valence shift."""
@@ -347,19 +367,24 @@ class InteractiveSessionRunner:
         manual_need: UserNeed | None = None,
     ) -> dict | None:
         """Execute one complete Turn: Fusion -> Feedback Update -> Policy -> History -> Turn Card."""
+        from dataclasses import replace
+
         now = event.timestamp
-        if manual_need is not None:
-            current_need = manual_need
-        elif self.history.preferred_need is not None:
-            current_need = self.history.preferred_need
-        else:
-            current_need = self.default_need
+        explicit_ui_need = (
+            manual_need
+            if (manual_need is not None and manual_need is not UserNeed.UNKNOWN)
+            else (self.default_need if (manual_need is None and self.default_need is not UserNeed.UNKNOWN) else None)
+        )
+        current_need = explicit_ui_need if explicit_ui_need is not None else UserNeed.UNKNOWN
 
         # 1. 提取视觉感知
         if event.event_type == TurnEventType.SPEECH_FINISHED:
             start_t = event.speech_start or (now - 3.0)
             end_t = event.speech_end or now
             vis_rec = self.visual_buffer.get_aggregated_record(start_t, end_t)
+            user_initiated = True
+        elif event.event_type == TurnEventType.TEXT_INPUT:
+            vis_rec = self.visual_buffer.get_recent_aggregated_record(duration_seconds=3.0)
             user_initiated = True
         else:
             # 静默超时：取最近 3 秒面部表情均值
@@ -379,6 +404,38 @@ class InteractiveSessionRunner:
             # 过滤非言语环境杂音：对于 SPEECH_FINISHED 事件，如果未识别出任何有效文字，直接忽略，绝不生成“[沉默无言语]”的伪说话轮次
             if not text_rec.available:
                 return None
+        elif event.event_type == TurnEventType.TEXT_INPUT:
+            clean_text = (event.text_input or "").strip()
+            if not clean_text:
+                return None
+            corr = f"text_turn_{int(now * 1000)}"
+            audio_rec = PerceptionRecord(
+                modality=PerceptionModality.AUDIO,
+                source=PerceptionSource.MICROPHONE,
+                model_name="text_input_mode",
+                model_version="1.0",
+                timestamp=now,
+                raw_scores={},
+                mapped_scores={},
+                signal_quality=0.0,
+                available=False,
+                missing_reason="TEXT_INPUT_ONLY",
+                correlation_id=corr,
+            )
+            lex_scores, lex_q, lex_meta = estimate_text_affect(clean_text)
+            text_rec = PerceptionRecord(
+                modality=PerceptionModality.TEXT,
+                source=PerceptionSource.ASR,
+                model_name="text_input+zh_lexicon_v1",
+                model_version="1.0",
+                timestamp=now,
+                raw_scores=lex_meta,
+                mapped_scores=lex_scores,
+                signal_quality=lex_q,
+                available=True,
+                transcript=clean_text,
+                correlation_id=corr,
+            )
         else:
             # 静默无音频输入
             empty_corr = f"silence_turn_{int(now * 1000)}"
@@ -410,12 +467,57 @@ class InteractiveSessionRunner:
                 correlation_id=empty_corr,
             )
 
+        # 2.5 上游 LLM 语义分析：识别用户明确需求 (UserNeed) 与更精准的文本 7 类情绪分布
+        llm_detected_need = "UNKNOWN"
+        llm_need_confidence = 0.0
+        llm_need_reason = ""
+        if (
+            event.event_type in (TurnEventType.SPEECH_FINISHED, TurnEventType.TEXT_INPUT)
+            and text_rec.available
+            and self.llm_adapter is not None
+            and self.llm_adapter.enabled
+        ):
+            llm_analysis = self.llm_adapter.analyze_utterance(
+                text_rec.transcript,
+                recent_turns=self.journey_records,
+            )
+            if llm_analysis is not None:
+                llm_detected_need = llm_analysis.user_need.value
+                llm_need_confidence = llm_analysis.need_confidence
+                llm_need_reason = llm_analysis.need_reason
+                text_rec = PerceptionRecord(
+                    modality=PerceptionModality.TEXT,
+                    source=PerceptionSource.ASR,
+                    model_name=llm_analysis.source,
+                    model_version="1.0",
+                    timestamp=text_rec.timestamp,
+                    raw_scores={
+                        **text_rec.raw_scores,
+                        "_llm_need_conf": llm_analysis.need_confidence,
+                    },
+                    mapped_scores=llm_analysis.text_emotion,
+                    signal_quality=llm_analysis.signal_quality,
+                    available=True,
+                    transcript=text_rec.transcript,
+                    correlation_id=text_rec.correlation_id,
+                    latency_ms=text_rec.latency_ms,
+                )
+                # 若 LLM 识别出明确暂停意图，最高优先级尊重用户边界；
+                # 若当前处于“自动感知 (UNKNOWN)”模式且 LLM 识别出高置信需求，自动采用该需求
+                if llm_analysis.user_need is UserNeed.PAUSE:
+                    current_need = UserNeed.PAUSE
+                elif current_need is UserNeed.UNKNOWN and llm_analysis.user_need is not UserNeed.UNKNOWN:
+                    current_need = llm_analysis.user_need
+
         self.turn_index += 1
 
         # 3. 完整三模态后期融合与多源不确定性画像
-        # 关键修复：传入全部 3 个通道 [vis, audio, text]（含缺失通道），保证 data_coverage 真实反映模态覆盖率；
-        # 同时传入 _previous_distribution 激活跨轮时序波动 temporal_instability
-        all_records = [vis_rec, audio_rec, text_rec]
+        # 关键修复：语音/静默轮次传入全部 3 个通道 [vis, audio, text]（含缺失通道），保证 data_coverage 真实反映模态覆盖率；
+        # 界面打字测试模式 (TEXT_INPUT) 不强制计入未启用的麦克风通道（摄像头开启时融合 [vis, text]，未开启时用 [text]），方便直接调试 Need 与回复
+        if event.event_type == TurnEventType.TEXT_INPUT:
+            all_records = [vis_rec, text_rec] if vis_rec.available else [text_rec]
+        else:
+            all_records = [vis_rec, audio_rec, text_rec]
         fusion_result = safe_fuse_records(
             all_records,
             previous_distribution=self._previous_distribution,
@@ -434,6 +536,15 @@ class InteractiveSessionRunner:
                 accepted=True,
             )
 
+        # 4.5 Need 短时沿用与自动衰减：
+        # 明确提出的 Need 仅自然延续下一轮（1 轮记忆）；若连续 2 轮未再提明确需求，则自动松手退回情绪驱动
+        if explicit_ui_need is not None or llm_detected_need != "UNKNOWN":
+            self._need_idle_turns = 0
+        else:
+            self._need_idle_turns += 1
+            if self._need_idle_turns >= 2 and self.history.preferred_need is not None:
+                self.history = replace(self.history, preferred_need=None)
+
         # 5. Uncertainty-Aware Policy 决策 (按 ESConv 交互进程：前 2 轮为探索阶段，第 3 轮起进入支持阶段)
         stage = InteractionStage.EXPLORING if self.turn_index <= 2 else InteractionStage.SUPPORTING
         context = PolicyContext(
@@ -443,6 +554,18 @@ class InteractiveSessionRunner:
             history=self.history,
         )
         decision = self.policy.decide(aff, unc, context)
+
+        # 5.5 下游受控回复生成：严格服从 Policy 四元组，WAIT/NONE 绝不调用大模型发声
+        if self.llm_adapter is not None and self.llm_adapter.enabled:
+            system_reply = self.llm_adapter.generate_reply(
+                decision=decision,
+                affect=aff,
+                uncertainty=unc,
+                transcript=text_rec.transcript if text_rec.available else "",
+                recent_turns=self.journey_records,
+            )
+        else:
+            system_reply = realize_response(decision)
 
         # 保存本轮状态供下一轮计算时序波动与反馈效果
         if unc.data_coverage > 0.0:
@@ -470,6 +593,9 @@ class InteractiveSessionRunner:
             "event_type": event.event_type.value,
             "user_initiated": user_initiated,
             "user_need": current_need.value,
+            "llm_detected_need": llm_detected_need,
+            "llm_need_confidence": llm_need_confidence,
+            "llm_need_reason": llm_need_reason,
             "transcript": text_rec.transcript if text_rec.available else "[沉默无言语]",
             "face_dominant_emotion": top_vis_label,
             "face_signal_quality": vis_rec.signal_quality,
@@ -490,6 +616,7 @@ class InteractiveSessionRunner:
             "policy_intensity": decision.intensity.value,
             "epistemic_style": decision.epistemic_style.value,
             "policy_reasons": list(decision.reasons),
+            "system_reply": system_reply,
         }
         self.journey_records.append(turn_data)
 
@@ -500,7 +627,10 @@ class InteractiveSessionRunner:
     @staticmethod
     def _print_turn_card(data: dict) -> None:
         idx = data["turn_index"]
-        ev = "🗣️ 用户主动发言结束" if data["user_initiated"] else "⏳ 长时间静默留白"
+        if data.get("event_type") == TurnEventType.TEXT_INPUT.value:
+            ev = "⌨️ 测试文字输入"
+        else:
+            ev = "🗣️ 用户主动发言结束" if data["user_initiated"] else "⏳ 长时间静默留白"
         disagree_str = f"{data['cross_modal_disagreement']:.4f}" if data['cross_modal_disagreement'] is not None else "0.0000 (单模态)"
 
         print("\n" + "=" * 62)
@@ -523,4 +653,7 @@ class InteractiveSessionRunner:
         print("\n【3. 策略依据 (Decision Rationale)】")
         for reason in data["policy_reasons"]:
             print(f"  • {reason}")
+        if data.get("system_reply"):
+            print("\n【4. 系统自适应回复话语 (Adaptive Response)】")
+            print(f"  「{data['system_reply']}」")
         print("=" * 62 + "\n")

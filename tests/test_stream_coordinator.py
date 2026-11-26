@@ -123,7 +123,7 @@ class TestStreamCoordinator(unittest.TestCase):
         self.assertEqual(ev_timeout.event_type, TurnEventType.PROLONGED_SILENCE)
 
     def test_interactive_session_runner_handles_turns(self) -> None:
-        runner = InteractiveSessionRunner(default_need=UserNeed.COMFORT)
+        runner = InteractiveSessionRunner(default_need=UserNeed.COMFORT, use_llm=False)
 
         # 模拟存入人脸记录到 buffer
         rec = PerceptionRecord(

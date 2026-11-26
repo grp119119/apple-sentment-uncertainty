@@ -189,7 +189,7 @@ class TestV4Fixes(unittest.TestCase):
         from affective.perception.stream_coordinator import InteractiveSessionRunner
 
         mock_audio = MagicMock()
-        runner = InteractiveSessionRunner(audio_detector=mock_audio, default_need=UserNeed.UNKNOWN)
+        runner = InteractiveSessionRunner(audio_detector=mock_audio, default_need=UserNeed.UNKNOWN, use_llm=False)
         now = time.time()
 
         # Turn 1: 静默超时，仅摄像头检测到清晰的悲伤人脸 (1/3 模态覆盖 -> coverage=0.333 < 0.50 -> WAIT)
